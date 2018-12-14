@@ -1,74 +1,39 @@
 include (ExternalProject)
 
+include(engine_options)
 
-if(NOT TOOLCHAIN_DIR)
-    set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
-endif()
-
-if(NOT TARGET_SYSROOT)
-    set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
-endif()
-
-if(NOT TARGET_TRIPLE)
-    set(TARGET_TRIPLE arm-linux-gnueabihf)
-endif()
-
-if(NOT TARGET_ARCHITECTURE)
-    set(TARGET_ARCHITECTURE arm)
-endif()
 
 if(NOT ENGINE_REPO)
     set(ENGINE_REPO https://github.com/flutter/engine.git)
 endif()
-
 
 set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
 configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
 
 
 find_program(gclient REQUIRED)
-
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND cd src && flutter/tools/gn 
-    --target-sysroot ${TARGET_SYSROOT}
-    --target-toolchain ${TOOLCHAIN_DIR}
-    --target-triple ${TARGET_TRIPLE}
-    --linux-cpu ${TARGET_ARCHITECTURE}
-    --runtime-mode debug
-    --embedder-for-target
-    --no-lto
-    --target-os linux
-    --arm-float-abi hard
-    #--unoptimized
-
-    BUILD_COMMAND cd src && autoninja -C out/linux_debug_arm
-
+    ${ENGINE_CONFIG}
+    ${ENGINE_FLAGS}
+    BUILD_COMMAND cd src && autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND ""
 )
 
-set(FLUTTER_ENGINE_LIBRARIES_DIR ${FLUTTER_ENGINE_SRC_PATH}/out)
-set(FLUTTER_ENGINE_INCLUDE_DIR ${FLUTTER_ENGINE_SRC_PATH}/out)
+set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 
-
-include_directories(
-    ${CMAKE_INSTALL_PREFIX}/include
-    ${FLUTTER_ENGINE_INCLUDE_DIR}
-)
-
-link_directories(
-    ${CMAKE_INSTALL_PREFIX}/lib
-    ${CMAKE_INSTALL_PREFIX}/lib/static
-    ${FLUTTER_ENGINE_LIBRARIES_DIR}
-)
+include_directories(${ENGINE_INCLUDE_DIR})
+link_directories(${ENGINE_LIBRARIES_DIR})
 
 if(BUILD_TOOLCHAIN)
 
     set(LLVM_SRC_DIR ${CMAKE_BINARY_DIR}/llvm)
 
-    set(TARGET_FLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -L${TARGET_SYSROOT}/lib/${TARGTE_TRIPLE} -ldl")
+    set(TARGET_FLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS")
 
 
     configure_file(cmake/clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/toolchain.cmake @ONLY)
@@ -95,20 +60,6 @@ if(BUILD_TOOLCHAIN)
             -DLLVM_TARGETS_TO_BUILD=ARM
     )
 
-    ExternalProject_Add(binutils
-        URL http://ftp.gnu.org/gnu/binutils/binutils-2.31.tar.gz
-        URL_MD5 2a14187976aa0c39ad92363cfbc06505
-        BUILD_IN_SOURCE 1
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ./configure 
-            --prefix=${TOOLCHAIN_DIR} 
-            --target=${TARGET_TRIPLE}
-            --enable-gold 
-            --enable-ld 
-        BUILD_COMMAND make
-        INSTALL_COMMAND make install
-    )
-
     #
     # cross compiler for target
     #
@@ -127,6 +78,7 @@ if(BUILD_TOOLCHAIN)
             -DLLVM_TARGETS_TO_BUILD=ARM
             -DLIBCXX_ENABLE_SHARED=false
             -DLIBCXXABI_ENABLE_EXCEPTIONS=false
+            --debug-trycompile
     )
     add_dependencies(libcxxabi clang)
 
@@ -150,7 +102,23 @@ if(BUILD_TOOLCHAIN)
             -DLIBCXX_CXX_ABI_INCLUDE_PATHS=${TOOLCHAIN_DIR}/include/c++/v1
             -DLIBCXX_CXX_ABI_LIBRARY_PATH=/sdk/toochain/lib
     )
-    add_dependencies(libcxx clang)
+    add_dependencies(libcxx libcxxabi)
+
+    ExternalProject_Add(binutils
+        URL http://ftp.gnu.org/gnu/binutils/binutils-2.31.tar.gz
+        URL_MD5 2a14187976aa0c39ad92363cfbc06505
+        BUILD_IN_SOURCE 1
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ./configure 
+            --prefix=${TOOLCHAIN_DIR} 
+            --target=${TARGET_TRIPLE}
+            --enable-gold 
+            --enable-ld 
+        BUILD_COMMAND make
+        INSTALL_COMMAND make install
+    )
+    add_dependencies(binutils libcxx)
+
 
     # only if building toolchain...
     add_dependencies(engine libcxx)

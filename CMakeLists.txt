@@ -18,5 +18,4 @@ project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDER_VERSION}" LANGUAGES CXX C)
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 
-set(BUILD_TOOLCHAIN ON)
 include(build_dependencies)
