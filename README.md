@@ -22,7 +22,7 @@ This repo is currently about build automation for Tip of the Tree Clang, Binutil
     git clone https://github.com/jwinarske/flutter_embedded
     cd flutter_embedded
     mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release -GNinja
+    cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
     autoninja
 
 
@@ -41,8 +41,8 @@ This is the location of the target sysroot.  The default value is "${CMAKE_SOURC
 ### TARGET_TRIPLE
 This is the triple of your toolchain.  The default value used is "arm-linux-gnueabihf"
 
-TARGET_ARCHITECTURE
-### This is the target architecture of your build.  It must  match your toolchain, and that which the flutter engine build supports.
+### TARGET_ARCHITECTURE
+This is the target architecture of your build.  It must  match your toolchain, and that which the flutter engine build supports.
 
 ### ENGINE_REPO
 This is the repo of the flutter engine.  The default value is https://github.com/flutter/engine.git.  If you want to use your own fork, set this variable to point to your fork's url.
