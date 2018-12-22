@@ -1,5 +1,5 @@
-if(NOT TARGET_ARCHITECTURE)
-    set(TARGET_ARCHITECTURE arm)
+if(NOT TARGET_ARCH)
+    set(TARGET_ARCH arm)
 endif()
 
 option(ENGINE_UNOPTIMIZED "Unoptimized flag" OFF)
@@ -50,14 +50,14 @@ else()
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --no-goma)
 endif()
 
-option(ENGINE_LTO "Enable lto" OFF)
+option(ENGINE_LTO "Enable lto" ON)
 if(ENGINE_LTO)
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --lto)
 else()
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --no-lto)
 endif()
 
-option(ENGINE_EMBEDDER_FOR_TARGET "Embedder for Target" OFF)
+option(ENGINE_EMBEDDER_FOR_TARGET "Embedder for Target" ON)
 if(ENGINE_EMBEDDER_FOR_TARGET)
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --embedder-for-target)
 endif()
@@ -69,67 +69,52 @@ endif()
 
 
 if(ANDROID)
-    # variables set in android.toolchain.cmake
+
+    set(TARGET_OS android)
+
+    # "ANDROID_" prefixed variables are set in android.toolchain.cmake
     set(TOOLCHAIN_DIR ${ANDROID_TOOLCHAIN_ROOT})
     set(TARGET_SYSROOT ${ANDROID_SYSROOT})
     set(TARGET_TRIPLE ${ANDROID_LLVM_TRIPLE})
 
-    #--android-cpu {arm,x64,x86,arm64}
-    
+    # arm,x64,x86,arm64
     if(ANDROID_SYSROOT_ABI STREQUAL "x86_64")
-        set(APPEND_ARCH "_x64")
-        set(TARGET_ARCHITECTURE x64)
-        set(FLAG_CPU_CONFIG --android-cpu x64)
+        set(TARGET_ARCH x64)
+        set(APPEND_ARCH "_${TARGET_ARCH}")
     else()
         if(ANDROID_SYSROOT_ABI STREQUAL "arm")
             set(APPEND_ARCH "")
         else()
-            set(APPEND_ARCH "_${ANDROID_SYSROOT_ABI}")
-            set(FLAG_CPU_CONFIG --android-cpu ${ANDROID_SYSROOT_ABI})
+            set(TARGET_ARCH ${ANDROID_SYSROOT_ABI})
+            set(APPEND_ARCH "_${TARGET_ARCH}")
         endif()
     endif()
 
-    set(ENGINE_CONFIG --android ${FLAG_CPU_CONFIG})
-    set(TARGET_OS android)
-    
+    set(ENGINE_FLAGS ${ENGINE_FLAGS} --${TARGET_OS} --android-cpu ${TARGET_ARCH})
 
 elseif(DARWIN)
-    set(ENGINE_CONFIG --ios --ios-cpu ${TARGET_ARCHITECTURE})  # arm,arm64
+set(ENGINE_FLAGS ${ENGINE_FLAGS} --ios --ios-cpu ${TARGET_ARCH})  # arm,arm64
     set(TARGET_OS ios)
 else()
-    set(ENGINE_CONFIG 
+    set(ENGINE_FLAGS ${ENGINE_FLAGS} 
       --target-sysroot ${TARGET_SYSROOT}
       --target-toolchain ${TOOLCHAIN_DIR}
       --target-triple ${TARGET_TRIPLE}
       --target-os linux
-      --linux-cpu ${TARGET_ARCHITECTURE} # x64,x86,arm64,arm
-      --no-lto
+      --linux-cpu ${TARGET_ARCH} # x64,x86,arm64,arm
     )
   
     set(TARGET_OS linux)
 endif()
 
-if(TARGET_ARCHITECTURE MATCHES "^arm")
+if(TARGET_ARCH MATCHES "^arm")
     if(ENGINE_ARM_FP)
         if(ENGINE_ARM_FP STREQUAL "hard" OR 
            ENGINE_ARM_FP STREQUAL "soft" OR 
            ENGINE_ARM_FP STREQUAL "softfp")
-            set(ENGINE_FLAGS ${ENGINE_FLAGS} --arm-float-abi ${ENGINE_ARM_FP})
+           set(ENGINE_FLAGS ${ENGINE_FLAGS} --arm-float-abi ${ENGINE_ARM_FP})
         endif()
     endif()
-endif()
-
-if(NOT TOOLCHAIN_DIR)
-    set(BUILD_TOOLCHAIN true)
-    set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
-endif()
-
-if(NOT TARGET_SYSROOT)
-    set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
-endif()
-
-if(NOT TARGET_TRIPLE)
-    set(TARGET_TRIPLE ${TARGET_ARCHITECTURE}-linux-gnueabihf)
 endif()
 
 

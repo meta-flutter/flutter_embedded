@@ -33,7 +33,7 @@ To use the override variables, pass them in with the cmake command.  One example
 
 
 ### TOOLCHAIN_DIR
-This is the directory of the installed toolchain.  The default value used is "${CMAKE_SOURCE_DIR}/sdk/toolchain".  When the toolchain is built, it's installed to this directory.
+This is the directory of the installed toolchain.  The default value used is "${CMAKE_SOURCE_DIR}/sdk/toolchain".  When the toolchain is built, it's installed to this directory.  If TOOLCHAIN_DIR is not set, it will build the toolchain.
 
 ### TARGET_SYSROOT
 This is the location of the target sysroot.  The default value is "${CMAKE_SOURCE_DIR}/sdk/sysroot".  One approach would be to download target image such as a Raspberry Pi image, and mount it.  Setting TARGET_SYSROOT to the rootfs directory.
@@ -41,12 +41,60 @@ This is the location of the target sysroot.  The default value is "${CMAKE_SOURC
 ### TARGET_TRIPLE
 This is the triple of your toolchain.  The default value used is "arm-linux-gnueabihf"
 
-### TARGET_ARCHITECTURE
+### TARGET_ARCH
 This is the target architecture of your build.  It must  match your toolchain, and that which the flutter engine build supports.
 
 ### ENGINE_REPO
 This is the repo of the flutter engine.  The default value is https://github.com/flutter/engine.git.  If you want to use your own fork, set this variable to point to your fork's url.
 
+### LLVM_TARGETS_TO_BUILD
+List of Targets LLVM should be built with.  Relavant to Flutter the options are:
+"AArch64;ARM;X86".  Host architecture (x86_64) is implicit, as that is the expected build host.  If crosscompiling compiler-rt, libcxxabi, and libcxx the current scheme expects only a single value for LLVM_TARGETS_TO_BUILD.
+
+### BUILD_COMPILER_RT
+Checks out and builds compiler-rt for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
+
+### BUILD_LIBCXXABI
+Checks out and builds libcxxabi for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
+
+### BUILD_LIBCXX
+Checks out and builds libcxx.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
+
+### BUILD_LLD
+Checks out and builds lld.  Default value is OFF, and valid only when TOOLCHAIN_DIR is not set.  This option enables the use of "-fuse-ld=lld".
+
+### ENGINE_UNOPTIMIZED
+Unoptimized flag, defaults to OFF
+
+### ENGINE_RUNTIME_MODE
+If ENGINE_RUNTIME_MODE is not set to debug, profile, or release, it will default to debug.
+
+### ENGINE_DYNAMIC
+Enable Dynamic, defaults to off.
+
+### ENGINE_SIMULATOR
+Enable simulator, defaults to OFF
+
+### ENGINE_INTERPRETER
+Enable interpreter, defaults to OFF
+
+### ENGINE_DART_DEBUG
+Enable dart-debug, defaults to OFF
+
+### ENGINE_CLANG
+Enable clang, defaults to ON
+
+### ENGINE_GOMA
+Enable goma, defaults to OFF
+
+### ENGINE_LTO
+Enable link-time optimization, defaults to ON
+
+### ENGINE_EMBEDDER_FOR_TARGET
+Embedder for Target, defaults to ON
+
+### ENGINE_ENABLE_VULCAN
+Enable Vulcan, defaults to OFF
 
 # Android
 Example building Android engine.  The flutter engine uses it's own NDK copy.  So passing in the toolchain file is for project builds (your own executables and libraries).
@@ -74,3 +122,4 @@ https://www.raspberrypi.org/downloads/raspbian/
 
 https://medium.com/flutter-io/flutter-on-raspberry-pi-mostly-from-scratch-2824c5e7dcb1
 
+https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#libc
