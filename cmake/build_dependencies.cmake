@@ -1,5 +1,9 @@
 include (ExternalProject)
 
+if(NOT TARGET_ARCH)
+    set(TARGET_ARCH arm)
+endif()
+
 if(NOT TOOLCHAIN_DIR)
     set(BUILD_TOOLCHAIN true)
     set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
@@ -51,6 +55,7 @@ if(BUILD_TOOLCHAIN)
     # built for host
     #
     option(BUILD_COMPILER_RT "Checkout and build compiler-rt" OFF)
+    option(BUILD_LIBUNWIND "Checkout and build libunwind" OFF)
     option(BUILD_LIBCXXABI "Checkout and build libcxxabi" ON)
     option(BUILD_LIBCXX "Checkout and build libcxx" ON)
     option(BUILD_LLD "Checkout and build lld" OFF)
@@ -64,6 +69,12 @@ if(BUILD_TOOLCHAIN)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${LLVM_SRC_DIR}/projects &&
             svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt)
+    endif()
+
+    if(BUILD_LIBUNWIND)
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
+            cd ${LLVM_SRC_DIR}/runtimes &&
+            svn co http://llvm.org/svn/llvm-project/libunwind/trunk libunwind)
     endif()
 
     if(BUILD_LIBCXXABI)
@@ -139,6 +150,23 @@ if(BUILD_TOOLCHAIN)
                 -DCOMPILER_RT_BUILD_SANITIZERS=OFF
         )
         add_dependencies(compiler-rt clang binutils)
+    endif()
+
+    if(BUILD_LIBUNWIND)
+        ExternalProject_Add(libunwind
+            DOWNLOAD_COMMAND ""
+            BUILD_IN_SOURCE 0
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/runtimes/libunwind
+                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
+                -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
+                -DCMAKE_BUILD_TYPE=MinSizeRel
+                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLIBUNWIND_TARGET_TRIPLE=${TARGET_TRIPLE}
+                -DLIBUNWIND_SYSROOT=${TARGET_SYSROOT}
+        )
+        add_dependencies(libunwind clang binutils)
     endif()
 
     if(BUILD_LIBCXXABI)

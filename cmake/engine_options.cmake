@@ -1,6 +1,3 @@
-if(NOT TARGET_ARCH)
-    set(TARGET_ARCH arm)
-endif()
 
 option(ENGINE_UNOPTIMIZED "Unoptimized flag" OFF)
 if(ENGINE_UNOPTIMIZED)
