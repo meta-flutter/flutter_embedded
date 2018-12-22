@@ -1,7 +1,5 @@
 include (ExternalProject)
 
-include(engine_options)
-
 if(NOT TOOLCHAIN_DIR)
     set(BUILD_TOOLCHAIN true)
     set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
@@ -22,6 +20,7 @@ endif()
 set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
 configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
 
+include(engine_options)
 
 find_program(gclient REQUIRED)
 ExternalProject_Add(engine
@@ -99,7 +98,7 @@ if(BUILD_TOOLCHAIN)
             -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
             -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
             -DLLVM_ENABLE_LLD=${BUILD_LLD}
-#            -DLLVM_ENABLE_PROJECTS=${LLVM_PROJECTS}
+            -DLLVM_ENABLE_PROJECTS=${LLVM_PROJECTS}
     )
 
     ExternalProject_Add(binutils
@@ -155,7 +154,7 @@ if(BUILD_TOOLCHAIN)
                 -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
                 -DLIBCXXABI_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE}
-#                -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
         )
         add_dependencies(libcxxabi clang binutils)
         if(BUILD_COMPILER_RT)
@@ -176,7 +175,7 @@ if(BUILD_TOOLCHAIN)
                 -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
                 -DLIBCXX_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXX_TARGET_TRIPLE=${TARGET_TRIPLE}
-#                -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
         )
         add_dependencies(libcxx libcxxabi)
         if(BUILD_COMPILER_RT)
