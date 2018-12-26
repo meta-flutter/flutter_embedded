@@ -111,13 +111,17 @@ Example building Android engine.  The flutter engine uses it's own NDK copy.  So
 http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 
 https://github.com/flutter/flutter/wiki/Compiling-the-engine
+
 https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
 
 https://clang.llvm.org/get_started.html
+
 https://libcxx.llvm.org/docs/BuildingLibcxx.html
 
 https://medium.com/@zw3rk/making-a-raspbian-cross-compilation-sdk-830fe56d75ba
+
 https://medium.com/@au42/the-useful-raspberrypi-cross-compile-guide-ea56054de187
+
 https://www.raspberrypi.org/downloads/raspbian/
 
 https://medium.com/flutter-io/flutter-on-raspberry-pi-mostly-from-scratch-2824c5e7dcb1

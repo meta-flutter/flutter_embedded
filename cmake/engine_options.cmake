@@ -102,17 +102,23 @@ else()
     )
   
     set(TARGET_OS linux)
+    set(APPEND_ARCH "_${TARGET_ARCH}")
+
 endif()
 
 if(TARGET_ARCH MATCHES "^arm")
-    if(ENGINE_ARM_FP)
-        if(ENGINE_ARM_FP STREQUAL "hard" OR 
-           ENGINE_ARM_FP STREQUAL "soft" OR 
-           ENGINE_ARM_FP STREQUAL "softfp")
+    if(NOT ENGINE_ARM_FP)
+        if(${TARGET_TRIPLE} MATCHES "hf$")
+            set(ENGINE_FLAGS ${ENGINE_FLAGS} --arm-float-abi hard)
+        elseif(${TARGET_TRIPLE} MATCHES "eabi$")
+            set(ENGINE_FLAGS ${ENGINE_FLAGS} --arm-float-abi soft)
+        endif()
+    elseif(ENGINE_ARM_FP)
+        if(ENGINE_ARM_FP STREQUAL "hard" OR ENGINE_ARM_FP STREQUAL "soft" OR ENGINE_ARM_FP STREQUAL "softfp")
            set(ENGINE_FLAGS ${ENGINE_FLAGS} --arm-float-abi ${ENGINE_ARM_FP})
         endif()
     endif()
 endif()
 
 
-set(ENGINE_OUT_DIR out/${TARGET_OS}${APPEND_RUNTIME_MODE}${APPEND_UNOPT}${APPEND_ARCHITECTURE})
+set(ENGINE_OUT_DIR out/${TARGET_OS}${APPEND_RUNTIME_MODE}${APPEND_UNOPT}${APPEND_ARCH})

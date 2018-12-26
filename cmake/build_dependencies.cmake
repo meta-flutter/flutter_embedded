@@ -31,13 +31,13 @@ ExternalProject_Add(engine
     DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND cd src && flutter/tools/gn ${ENGINE_FLAGS}
-    BUILD_COMMAND cd src && autoninja -C ${ENGINE_OUT_DIR}
+    CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
+    BUILD_COMMAND autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND ""
 )
 
-set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
-set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/${ENGINE_OUT_DIR})
+set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/${ENGINE_OUT_DIR})
 
 include_directories(${ENGINE_INCLUDE_DIR})
 link_directories(${ENGINE_LIBRARIES_DIR})
@@ -54,8 +54,8 @@ if(BUILD_TOOLCHAIN)
     #
     # built for host
     #
-    option(BUILD_COMPILER_RT "Checkout and build compiler-rt" OFF)
-    option(BUILD_LIBUNWIND "Checkout and build libunwind" OFF)
+    option(BUILD_COMPILER_RT "Checkout and build compiler-rt" ON)
+    option(BUILD_LIBUNWIND "Checkout and build libunwind" ON)
     option(BUILD_LIBCXXABI "Checkout and build libcxxabi" ON)
     option(BUILD_LIBCXX "Checkout and build libcxx" ON)
     option(BUILD_LLD "Checkout and build lld" OFF)
@@ -73,7 +73,7 @@ if(BUILD_TOOLCHAIN)
 
     if(BUILD_LIBUNWIND)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
-            cd ${LLVM_SRC_DIR}/runtimes &&
+            cd ${CMAKE_BINARY_DIR} &&
             svn co http://llvm.org/svn/llvm-project/libunwind/trunk libunwind)
     endif()
 
@@ -146,8 +146,8 @@ if(BUILD_TOOLCHAIN)
                 -DCOMPILER_RT_STANDALONE_BUILD=ON
                 -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DCOMPILER_RT_HAS_FPIC_FLAG=ON
-                -DCOMPILER_RT_BUILD_XRAY=OFF
-                -DCOMPILER_RT_BUILD_SANITIZERS=OFF
+                -DCOMPILER_RT_BUILD_XRAY=ON
+                -DCOMPILER_RT_BUILD_SANITIZERS=ON
         )
         add_dependencies(compiler-rt clang binutils)
     endif()
@@ -157,16 +157,25 @@ if(BUILD_TOOLCHAIN)
             DOWNLOAD_COMMAND ""
             BUILD_IN_SOURCE 0
             UPDATE_COMMAND ""
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/runtimes/libunwind
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR}/libunwind
                 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
-                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+                -DCMAKE_VERBOSE_MAKEFILE=ON #${CMAKE_VERBOSE_MAKEFILE}
                 -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLIBUNWIND_STANDALONE_BUILD=ON
                 -DLIBUNWIND_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBUNWIND_SYSROOT=${TARGET_SYSROOT}
+                -DLIBUNWIND_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBUNWIND_ENABLE_CROSS_UNWINDING=OFF
+                -DLIBUNWIND_ENABLE_STATIC=ON
+                -DLIBUNWIND_ENABLE_SHARED=OFF
+                -DLIBUNWIND_ENABLE_THREADS=ON
         )
         add_dependencies(libunwind clang binutils)
+        if(BUILD_COMPILER_RT)
+            add_dependencies(libunwind compiler-rt)
+        endif()
     endif()
 
     if(BUILD_LIBCXXABI)
@@ -182,7 +191,9 @@ if(BUILD_TOOLCHAIN)
                 -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
                 -DLIBCXXABI_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE}
+                -DLIBCXXABI_ENABLE_SHARED=OFF
                 -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBCXXABI_USE_LLVM_UNWINDER=TRUE
         )
         add_dependencies(libcxxabi clang binutils)
         if(BUILD_COMPILER_RT)
@@ -204,6 +215,7 @@ if(BUILD_TOOLCHAIN)
                 -DLIBCXX_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXX_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBCXX_ENABLE_SHARED=OFF
         )
         add_dependencies(libcxx libcxxabi)
         if(BUILD_COMPILER_RT)
