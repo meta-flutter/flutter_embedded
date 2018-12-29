@@ -1,3 +1,27 @@
+#
+# MIT License
+#
+# Copyright (c) 2018 Joel Winarske
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
 include (ExternalProject)
 
 if(NOT TARGET_ARCH)
@@ -32,7 +56,7 @@ ExternalProject_Add(engine
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
-    BUILD_COMMAND autoninja -C ${ENGINE_OUT_DIR}
+    BUILD_COMMAND autoninja -C src/${ENGINE_OUT_DIR}
     INSTALL_COMMAND ""
 )
 
@@ -58,7 +82,6 @@ if(BUILD_TOOLCHAIN)
     option(BUILD_LIBUNWIND "Checkout and build libunwind" ON)
     option(BUILD_LIBCXXABI "Checkout and build libcxxabi" ON)
     option(BUILD_LIBCXX "Checkout and build libcxx" ON)
-    option(BUILD_LLD "Checkout and build lld" OFF)
 
     set(LLVM_CHECKOUT
         svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm &&
@@ -89,13 +112,6 @@ if(BUILD_TOOLCHAIN)
             svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx)
     endif()
 
-    if(BUILD_LLD)
-        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
-            cd ${CMAKE_BINARY_DIR} &&
-            svn co http://llvm.org/svn/llvm-project/lld/trunk lld)
-        list(APPEND LLVM_PROJECTS lld)
-    endif()
-
     ExternalProject_Add(clang
         DOWNLOAD_COMMAND cd ${CMAKE_BINARY_DIR} && ${LLVM_CHECKOUT}
         SOURCE_DIR ${LLVM_SRC_DIR}
@@ -108,8 +124,6 @@ if(BUILD_TOOLCHAIN)
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
             -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
-            -DLLVM_ENABLE_LLD=${BUILD_LLD}
-            -DLLVM_ENABLE_PROJECTS=${LLVM_PROJECTS}
     )
 
     ExternalProject_Add(binutils
@@ -152,6 +166,29 @@ if(BUILD_TOOLCHAIN)
         add_dependencies(compiler-rt clang binutils)
     endif()
 
+    if(BUILD_LIBCXXABI)
+        ExternalProject_Add(libcxxabi
+            DOWNLOAD_COMMAND ""
+            BUILD_IN_SOURCE 0
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/libcxxabi
+                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
+                -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
+                -DCMAKE_BUILD_TYPE=MinSizeRel
+                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLIBCXXABI_SYSROOT=${TARGET_SYSROOT}
+                -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE}
+                -DLIBCXXABI_ENABLE_SHARED=ON
+                -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
+                -DLIBCXXABI_USE_LLVM_UNWINDER=${BUILD_LIBUNWIND}
+        )
+        add_dependencies(libcxxabi clang binutils)
+        if(BUILD_COMPILER_RT)
+            add_dependencies(libcxxabi compiler-rt)
+        endif()
+    endif()
+
     if(BUILD_LIBUNWIND)
         ExternalProject_Add(libunwind
             DOWNLOAD_COMMAND ""
@@ -161,7 +198,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
-                -DCMAKE_VERBOSE_MAKEFILE=ON #${CMAKE_VERBOSE_MAKEFILE}
+                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
                 -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
                 -DLIBUNWIND_STANDALONE_BUILD=ON
                 -DLIBUNWIND_TARGET_TRIPLE=${TARGET_TRIPLE}
@@ -176,28 +213,8 @@ if(BUILD_TOOLCHAIN)
         if(BUILD_COMPILER_RT)
             add_dependencies(libunwind compiler-rt)
         endif()
-    endif()
-
-    if(BUILD_LIBCXXABI)
-        ExternalProject_Add(libcxxabi
-            DOWNLOAD_COMMAND ""
-            BUILD_IN_SOURCE 0
-            UPDATE_COMMAND ""
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/libcxxabi
-                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
-                -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
-                -DCMAKE_BUILD_TYPE=MinSizeRel
-                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
-                -DLIBCXXABI_SYSROOT=${TARGET_SYSROOT}
-                -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE}
-                -DLIBCXXABI_ENABLE_SHARED=OFF
-                -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
-                -DLIBCXXABI_USE_LLVM_UNWINDER=TRUE
-        )
-        add_dependencies(libcxxabi clang binutils)
-        if(BUILD_COMPILER_RT)
-            add_dependencies(libcxxabi compiler-rt)
+        if(BUILD_LIBCXXABI AND BUILD_LIBUNWIND)
+            add_dependencies(libcxxabi libunwind)
         endif()
     endif()
 
@@ -215,13 +232,15 @@ if(BUILD_TOOLCHAIN)
                 -DLIBCXX_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXX_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
-                -DLIBCXX_ENABLE_SHARED=OFF
+                -DLIBCXX_ENABLE_SHARED=ON
         )
         add_dependencies(libcxx libcxxabi)
         if(BUILD_COMPILER_RT)
             add_dependencies(libcxx compiler-rt)
         endif()
-        add_dependencies(engine libcxx)
+        if(BUILD_LIBCXX)
+            add_dependencies(engine libcxx)
+        endif()
     endif()
 
 endif()
