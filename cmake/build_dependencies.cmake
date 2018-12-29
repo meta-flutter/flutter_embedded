@@ -78,42 +78,65 @@ if(BUILD_TOOLCHAIN)
     #
     # built for host
     #
+    option(BUILD_LLDB "Checkout and build lldb host and target" ON)
     option(BUILD_COMPILER_RT "Checkout and build compiler-rt" ON)
-    option(BUILD_LIBUNWIND "Checkout and build libunwind" ON)
-    option(BUILD_LIBCXXABI "Checkout and build libcxxabi" ON)
-    option(BUILD_LIBCXX "Checkout and build libcxx" ON)
+    option(BUILD_LIBUNWIND "Checkout and build libunwind for  target" ON)
+    option(BUILD_LIBCXXABI "Checkout and build libcxxabi for target" ON)
+    option(BUILD_LIBCXX "Checkout and build libcxx for target" ON)
 
     set(LLVM_CHECKOUT
+        cd ${CMAKE_BINARY_DIR} &&
         svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm &&
-        cd llvm/tools &&
+        cd ${LLVM_SRC_DIR}/tools &&
         svn co http://llvm.org/svn/llvm-project/cfe/trunk clang)
+
+    if(BUILD_LLDB)
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
+        cd ${LLVM_SRC_DIR}/tools &&
+        svn co http://llvm.org/svn/llvm-project/lldb/trunk lldb)
+    else()
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
+            cd ${LLVM_SRC_DIR}/tools && -rm -rf lldb)
+    endif()
 
     if(BUILD_COMPILER_RT)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${LLVM_SRC_DIR}/projects &&
             svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt)
+    else()
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
+            cd ${LLVM_SRC_DIR}/projects && -rm -rf compiler-rt)
     endif()
 
     if(BUILD_LIBUNWIND)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${CMAKE_BINARY_DIR} &&
             svn co http://llvm.org/svn/llvm-project/libunwind/trunk libunwind)
+    else()
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
+            cd ${CMAKE_BINARY_DIR} && -rm -rf libunwind)
     endif()
 
     if(BUILD_LIBCXXABI)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/projects &&
             svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi)
+    else()
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
+            cd ${LLVM_SRC_DIR}/projects && -rm -rf libcxxabi)
     endif()
     
     if(BUILD_LIBCXX)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${LLVM_SRC_DIR}/projects &&
             svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx)
+    else()
+        set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
+            cd ${LLVM_SRC_DIR}/projects && -rm -rf libcxx)
     endif()
 
     ExternalProject_Add(clang
-        DOWNLOAD_COMMAND cd ${CMAKE_BINARY_DIR} && ${LLVM_CHECKOUT}
+        DOWNLOAD_COMMAND ${LLVM_CHECKOUT}
         SOURCE_DIR ${LLVM_SRC_DIR}
         UPDATE_COMMAND ""
         BUILD_IN_SOURCE 0
@@ -127,16 +150,16 @@ if(BUILD_TOOLCHAIN)
     )
 
     ExternalProject_Add(binutils
-    URL http://ftp.gnu.org/gnu/binutils/binutils-2.31.tar.gz
-    URL_MD5 2a14187976aa0c39ad92363cfbc06505
-    BUILD_IN_SOURCE 1
-    UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure 
-        --prefix=${TOOLCHAIN_DIR} 
-        --target=${TARGET_TRIPLE}
-        --enable-gold 
-        --enable-ld 
-        --enable-lto
+        URL http://ftp.gnu.org/gnu/binutils/binutils-2.31.tar.gz
+        URL_MD5 2a14187976aa0c39ad92363cfbc06505
+        BUILD_IN_SOURCE 1
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ./configure 
+            --prefix=${TOOLCHAIN_DIR} 
+            --target=${TARGET_TRIPLE}
+            --enable-gold 
+            --enable-ld 
+            --enable-lto
     )
     add_dependencies(binutils clang)
 
@@ -241,6 +264,33 @@ if(BUILD_TOOLCHAIN)
         if(BUILD_LIBCXX)
             add_dependencies(engine libcxx)
         endif()
+    endif()
+
+    
+    # lldb appears not to support cross compiling as documented...
+    if(FALSE) #BUILD_LLDB)
+        ExternalProject_Add(lldb_target
+            DOWNLOAD_COMMAND ""
+            UPDATE_COMMAND ""
+            BUILD_IN_SOURCE 0
+            CONFIGURE_COMMAND set(ENV{PATH} ${TOOLCHAIN_DIR}/bin:ENV{PATH}) && 
+                ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/tools/lldb
+                -DCMAKE_CXX_FLAGS=-stdlib=libc++
+                -DCMAKE_CROSSCOMPILING=ON
+                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
+                -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
+                -DCMAKE_BUILD_TYPE=MinSizeRel
+                -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_HOST_TRIPLE=${TARGET_TRIPLE}
+                -DLLVM_TABLEGEN=${TOOLCHAIN_DIR}/bin/llvm-tblgen
+                -DCLANG_TABLEGEN=${CMAKE_BINARY_DIR}/clang-prefix/src/clang-build/bin/clang-tblgen
+                -DLLDB_DISABLE_PYTHON=ON
+                -DLLDB_DISABLE_LIBEDIT=ON
+                -DLLDB_DISABLE_CURSES=ON
+                -DLLVM_ENABLE_TERMINFO=OFF 
+        )
+        add_dependencies(lldb_target libcxx)
     endif()
 
 endif()
