@@ -267,17 +267,20 @@ if(BUILD_TOOLCHAIN)
     endif()
 
     
-    # lldb appears not to support cross compiling as documented...
-    if(FALSE) #BUILD_LLDB)
+    # Currently cross compiling lldb requires a cross compiled clang, even though not really used.
+    # We're currently only building Clang for host arch.
+    if(BUILD_LLDB)
         ExternalProject_Add(lldb_target
             DOWNLOAD_COMMAND ""
             UPDATE_COMMAND ""
             BUILD_IN_SOURCE 0
+            LIST_SEPARATOR |
             CONFIGURE_COMMAND set(ENV{PATH} ${TOOLCHAIN_DIR}/bin:ENV{PATH}) && 
                 ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/tools/lldb
-                -DCMAKE_CXX_FLAGS=-stdlib=libc++
-                -DCMAKE_CROSSCOMPILING=ON
                 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
+                -DCMAKE_CXX_FLAGS="--target=arm-linux-gnueabihf -stdlib=libc++"
+                -DCMAKE_SHARED_LINKER_FLAGS="-v -L${TOOLCHAIN_DIR}/lib -lc -stdlib=libc++ -fuse-ld=gold"
+                -DCMAKE_CROSSCOMPILING=ON
                 -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}

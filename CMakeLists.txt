@@ -45,8 +45,34 @@ message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 option(BUILD_RPI_EMBEDDER "Build Raspberry Pi Embedder" ON)
 option(BUILD_WAYLAND_EMBEDDER "Build Wayland Embedder" OFF)
 
-include(ExternalProject)
+
+include(build_dependencies)
+
 if(BUILD_RPI_EMBEDDER)
+
+    configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
+
+    #
+    # build /opt/vc/src/hello_pi apps
+    #
+    configure_file(cmake/hello_pi.cmake ${TARGET_SYSROOT}/opt/vc/src/hello_pi/CMakeLists.txt COPYONLY)
+    ExternalProject_Add(hello_pi
+        PATCH_COMMAND ""
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/sdk/sysroot/opt/vc/src/hello_pi
+        BUILD_IN_SOURCE 0
+        UPDATE_COMMAND ""
+        CMAKE_ARGS
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
+            -DCMAKE_BUILD_TYPE=MinSizeRel
+            -DCMAKE_VERBOSE_MAKEFILE=OFF
+            -DSDKSTAGE=${CMAKE_SOURCE_DIR}/sdk/sysroot
+    )
+    if(BUILD_LIBCXX)
+        add_dependencies(hello_pi libcxx)
+    endif()
+
+    #TODO place holder
     set(FLUTTER_EMBEDDER_TARGET_NAME "Raspberry Pi")
     ExternalProject_Add(rpi_embedder
         GIT_REPOSITORY https://github.com/chinmaygarde/flutter_from_scratch.git
@@ -57,7 +83,10 @@ if(BUILD_RPI_EMBEDDER)
         BUILD_COMMAND autoninja -C out
         INSTALL_COMMAND ""
     )
+    add_dependencies(rpi_embedder engine)
+
 elseif(BUILD_WAYLAND_EMBEDDER)
+    #TODO place holder
     set(FLUTTER_EMBEDDER_TARGET_NAME "Wayland")
     ExternalProject_Add(wayland_embedder
         GIT_REPOSITORY https://github.com/chinmaygarde/flutter_wayland.git
@@ -68,13 +97,7 @@ elseif(BUILD_WAYLAND_EMBEDDER)
         BUILD_COMMAND autoninja -C out
         INSTALL_COMMAND ""
     )
-endif()
-message(STATUS "Embedder ............... ${FLUTTER_EMBEDDER_TARGET_NAME}")
-
-include(build_dependencies)
-
-if(BUILD_RPI_EMBEDDER)
-    add_dependencies(rpi_embedder engine)
-elseif(BUILD_WAYLAND_EMBEDDER)
     add_dependencies(wayland_embedder engine)
 endif()
+
+message(STATUS "Embedder ............... ${FLUTTER_EMBEDDER_TARGET_NAME}")

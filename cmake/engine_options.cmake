@@ -36,7 +36,7 @@ set(ENGINE_FLAGS ${ENGINE_FLAGS} --runtime-mode ${ENGINE_RUNTIME_MODE})
 set(APPEND_RUNTIME_MODE _${ENGINE_RUNTIME_MODE})
 
 
-option(ENGINE_DYNAMIC "Enable dynamic" OFF)
+option(ENGINE_DYNAMIC "Enable dynamic" ON)
 if(ENGINE_DYNAMIC)
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --dynamic)
 endif()
