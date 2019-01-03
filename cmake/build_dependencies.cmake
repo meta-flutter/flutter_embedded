@@ -33,6 +33,11 @@ if(NOT TOOLCHAIN_DIR)
     set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
 endif()
 
+if(NOT LLVM_CONFIG_PATH)
+    set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
+endif()
+include(llvm_config)
+
 if(NOT TARGET_SYSROOT)
     set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
 endif()
@@ -60,8 +65,8 @@ ExternalProject_Add(engine
     INSTALL_COMMAND ""
 )
 
-set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/${ENGINE_OUT_DIR})
-set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/${ENGINE_OUT_DIR})
+set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 
 include_directories(${ENGINE_INCLUDE_DIR})
 link_directories(${ENGINE_LIBRARIES_DIR})
@@ -78,7 +83,7 @@ if(BUILD_TOOLCHAIN)
     #
     # built for host
     #
-    option(BUILD_LLDB "Checkout and build lldb host and target" ON)
+    option(BUILD_LLDB "Checkout and build lldb host and target" OFF)
     option(BUILD_COMPILER_RT "Checkout and build compiler-rt" ON)
     option(BUILD_LIBCXXABI "Checkout and build libcxxabi for target" ON)
     option(BUILD_LIBUNWIND "Checkout and build libunwind for  target" ON)
@@ -154,11 +159,11 @@ if(BUILD_TOOLCHAIN)
         URL_MD5 2a14187976aa0c39ad92363cfbc06505
         BUILD_IN_SOURCE 1
         UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ./configure 
-            --prefix=${TOOLCHAIN_DIR} 
+        CONFIGURE_COMMAND ./configure
+            --prefix=${TOOLCHAIN_DIR}
             --target=${TARGET_TRIPLE}
-            --enable-gold 
-            --enable-ld 
+            --enable-gold
+            --enable-ld
             --enable-lto
     )
     add_dependencies(binutils clang)
@@ -179,7 +184,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}/lib/clang/8.0.0
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
                 -DCOMPILER_RT_STANDALONE_BUILD=ON
                 -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DCOMPILER_RT_HAS_FPIC_FLAG=ON
@@ -199,7 +204,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
                 -DLIBCXXABI_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBCXXABI_ENABLE_SHARED=ON
@@ -222,7 +227,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
                 -DLIBUNWIND_STANDALONE_BUILD=ON
                 -DLIBUNWIND_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBUNWIND_SYSROOT=${TARGET_SYSROOT}
@@ -251,7 +256,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
                 -DLIBCXX_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXX_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
@@ -267,8 +272,8 @@ if(BUILD_TOOLCHAIN)
     endif()
 
     
-    # Currently cross compiling lldb requires a cross compiled clang, even though not really used.
-    # We're currently only building Clang for host arch.
+    # Currently cross compiling lldb requires a cross compiled clang, even though it's not really used.
+    # I'm currently only building Clang for host, so disable until work is done on lldb.
     if(FALSE)
         ExternalProject_Add(lldb_target
             DOWNLOAD_COMMAND ""
@@ -278,13 +283,11 @@ if(BUILD_TOOLCHAIN)
             CONFIGURE_COMMAND set(ENV{PATH} ${TOOLCHAIN_DIR}/bin:ENV{PATH}) && 
                 ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/tools/lldb
                 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
-                -DCMAKE_CXX_FLAGS="--target=arm-linux-gnueabihf -stdlib=libc++"
-                -DCMAKE_SHARED_LINKER_FLAGS="-v -L${TOOLCHAIN_DIR}/lib -lc -stdlib=libc++ -fuse-ld=gold"
                 -DCMAKE_CROSSCOMPILING=ON
                 -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DLLVM_CONFIG_PATH=${TOOLCHAIN_DIR}/bin/llvm-config
+                -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
                 -DLLVM_HOST_TRIPLE=${TARGET_TRIPLE}
                 -DLLVM_TABLEGEN=${TOOLCHAIN_DIR}/bin/llvm-tblgen
                 -DCLANG_TABLEGEN=${CMAKE_BINARY_DIR}/clang-prefix/src/clang-build/bin/clang-tblgen
@@ -297,3 +300,7 @@ if(BUILD_TOOLCHAIN)
     endif()
 
 endif()
+
+
+# Toolchain file for building apps
+configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
