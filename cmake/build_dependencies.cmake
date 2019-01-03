@@ -269,7 +269,7 @@ if(BUILD_TOOLCHAIN)
     
     # Currently cross compiling lldb requires a cross compiled clang, even though not really used.
     # We're currently only building Clang for host arch.
-    if(BUILD_LLDB)
+    if(FALSE)
         ExternalProject_Add(lldb_target
             DOWNLOAD_COMMAND ""
             UPDATE_COMMAND ""
