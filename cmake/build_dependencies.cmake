@@ -80,8 +80,8 @@ if(BUILD_TOOLCHAIN)
     #
     option(BUILD_LLDB "Checkout and build lldb host and target" ON)
     option(BUILD_COMPILER_RT "Checkout and build compiler-rt" ON)
-    option(BUILD_LIBUNWIND "Checkout and build libunwind for  target" ON)
     option(BUILD_LIBCXXABI "Checkout and build libcxxabi for target" ON)
+    option(BUILD_LIBUNWIND "Checkout and build libunwind for  target" ON)
     option(BUILD_LIBCXX "Checkout and build libcxx for target" ON)
 
     set(LLVM_CHECKOUT

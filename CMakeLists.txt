@@ -48,17 +48,22 @@ option(BUILD_WAYLAND_EMBEDDER "Build Wayland Embedder" OFF)
 
 include(build_dependencies)
 
-if(BUILD_RPI_EMBEDDER)
 
-    configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
+# Toolchain file for building apps
+configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
+
+
+if(BUILD_RPI_EMBEDDER)
 
     #
     # build /opt/vc/src/hello_pi apps
     #
+
     configure_file(cmake/hello_pi.cmake ${TARGET_SYSROOT}/opt/vc/src/hello_pi/CMakeLists.txt COPYONLY)
+
     ExternalProject_Add(hello_pi
         PATCH_COMMAND ""
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/sdk/sysroot/opt/vc/src/hello_pi
+        SOURCE_DIR ${TARGET_SYSROOT}/opt/vc/src/hello_pi
         BUILD_IN_SOURCE 0
         UPDATE_COMMAND ""
         CMAKE_ARGS
@@ -66,13 +71,15 @@ if(BUILD_RPI_EMBEDDER)
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
             -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_VERBOSE_MAKEFILE=OFF
-            -DSDKSTAGE=${CMAKE_SOURCE_DIR}/sdk/sysroot
+            -DSDKSTAGE=${TARGET_SYSROOT}
     )
     if(BUILD_LIBCXX)
         add_dependencies(hello_pi libcxx)
     endif()
 
+
     #TODO place holder
+
     set(FLUTTER_EMBEDDER_TARGET_NAME "Raspberry Pi")
     ExternalProject_Add(rpi_embedder
         GIT_REPOSITORY https://github.com/chinmaygarde/flutter_from_scratch.git
@@ -86,7 +93,9 @@ if(BUILD_RPI_EMBEDDER)
     add_dependencies(rpi_embedder engine)
 
 elseif(BUILD_WAYLAND_EMBEDDER)
+
     #TODO place holder
+
     set(FLUTTER_EMBEDDER_TARGET_NAME "Wayland")
     ExternalProject_Add(wayland_embedder
         GIT_REPOSITORY https://github.com/chinmaygarde/flutter_wayland.git
