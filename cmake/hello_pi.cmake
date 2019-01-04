@@ -47,24 +47,14 @@ add_executable(hello_encode hello_encode/encode.c)
 target_link_libraries(hello_encode ilclient openmaxil bcm_host vcos vchiq_arm pthread)
 add_dependencies(hello_encode ilclient)
 
-set(shader_src
-    hello_fft/hex/shader_256.hex hello_fft/hex/shader_512.hex
-    hello_fft/hex/shader_1k.hex hello_fft/hex/shader_2k.hex 
-    hello_fft/hex/shader_4k.hex hello_fft/hex/shader_8k.hex
-    hello_fft/hex/shader_16k.hex hello_fft/hex/shader_32k.hex
-    hello_fft/hex/shader_64k.hex hello_fft/hex/shader_128k.hex
-    hello_fft/hex/shader_256k.hex hello_fft/hex/shader_512k.hex
-    hello_fft/hex/shader_1024k.hex hello_fft/hex/shader_2048k.hex
-    hello_fft/hex/shader_4096k.hex)
-
 set(hello_fft_src
     hello_fft/mailbox.c hello_fft/gpu_fft.c hello_fft/gpu_fft_base.c 
     hello_fft/gpu_fft_twiddles.c hello_fft/gpu_fft_shaders.c)
 
-add_executable(hello_fft ${shader_src} ${hello_fft_src} hello_fft/hello_fft.c)
+add_executable(hello_fft ${hello_fft_src} hello_fft/hello_fft.c)
 target_link_libraries(hello_fft m dl)
 
-add_executable(hello_fft_2d ${shader_src} hello_fft/hex/shader_trans.hex ${hello_fft_src} hello_fft/hello_fft_2d.c hello_fft/gpu_fft_trans.c)
+add_executable(hello_fft_2d ${hello_fft_src} hello_fft/hello_fft_2d.c hello_fft/gpu_fft_trans.c)
 target_link_libraries(hello_fft_2d m dl)
 
 add_executable(hello_font hello_font/main.c)
@@ -123,3 +113,12 @@ install(TARGETS
     hello_world
 
     RUNTIME DESTINATION bin)
+
+install(FILES
+    hello_font/Vera.ttf
+    hello_triangle/Djenne_128_128.raw
+    hello_triangle/Gaudi_128_128.raw
+    hello_triangle/Lucca_128_128.raw
+    hello_video/test.h264
+    
+    DESTINATION bin)

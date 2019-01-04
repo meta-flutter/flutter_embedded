@@ -52,8 +52,10 @@ endif()
 
 set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
 configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
-
 include(engine_options)
+
+set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 
 find_program(gclient REQUIRED)
 ExternalProject_Add(engine
@@ -62,11 +64,15 @@ ExternalProject_Add(engine
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
     BUILD_COMMAND autoninja -C src/${ENGINE_OUT_DIR}
-    INSTALL_COMMAND ""
+    INSTALL_COMMAND
+        ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/target/lib &&
+        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/target/bin &&
+        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine.so ${CMAKE_BINARY_DIR}/target/lib &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++.so.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++.so.1 &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi.so.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi.so.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++.so.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi.so.1
 )
-
-set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
-set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 
 include_directories(${ENGINE_INCLUDE_DIR})
 link_directories(${ENGINE_LIBRARIES_DIR})

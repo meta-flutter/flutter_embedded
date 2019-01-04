@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.6)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
     message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to MinSizeRel.")
 endif()
 
-project(hello_pi LANGUAGES CXX)
+project(flutter LANGUAGES CXX)
 
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
@@ -42,4 +42,3 @@ add_executable(flutter ${cxx_sources})
 target_link_libraries(flutter brcmGLESv2 brcmEGL bcm_host flutter_engine pthread dl)
 
 install(TARGETS flutter RUNTIME DESTINATION bin)
-install(FILES ${ENGINE_LIBRARIES_DIR}/icudtl.dat DESTINATION bin)
