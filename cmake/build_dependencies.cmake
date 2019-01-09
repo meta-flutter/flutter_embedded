@@ -300,13 +300,29 @@ if(BUILD_TOOLCHAIN)
                 -DLLDB_DISABLE_PYTHON=ON
                 -DLLDB_DISABLE_LIBEDIT=ON
                 -DLLDB_DISABLE_CURSES=ON
-                -DLLVM_ENABLE_TERMINFO=OFF 
+                -DLLVM_ENABLE_TERMINFO=OFF
         )
         add_dependencies(lldb_target libcxx)
     endif()
 
 endif()
 
-
 # Toolchain file for building apps
 configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
+
+
+option(BUILD_TSLIB "Checkout and build tslib for target" ON)
+if(BUILD_TSLIB)
+    ExternalProject_Add(tslib
+        GIT_REPOSITORY https://github.com/kergoth/tslib.git
+        GIT_TAG 1.18
+        BUILD_IN_SOURCE 0
+        UPDATE_COMMAND ""
+        CMAKE_ARGS
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+        -DCMAKE_INSTALL_PREFIX=${TARGET_SYSROOT}
+        -DCMAKE_BUILD_TYPE=MinSizeRel
+        -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+    )
+    add_dependencies(tslib clang)
+endif()

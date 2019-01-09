@@ -39,6 +39,6 @@ set(cxx_sources
 )
 
 add_executable(flutter ${cxx_sources})
-target_link_libraries(flutter brcmGLESv2 brcmEGL bcm_host flutter_engine pthread dl)
+target_link_libraries(flutter ts brcmGLESv2 brcmEGL bcm_host flutter_engine pthread dl)
 
 install(TARGETS flutter RUNTIME DESTINATION bin)

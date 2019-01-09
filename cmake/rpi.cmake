@@ -27,11 +27,9 @@ endif()
 
 set(FLUTTER_TARGET_NAME "Raspberry Pi")
 ExternalProject_Add(rpi_flutter
-    GIT_REPOSITORY https://github.com/chinmaygarde/flutter_from_scratch.git
-    GIT_TAG master
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/cmake/rpi.flutter.cmake
-        ${CMAKE_BINARY_DIR}/rpi_flutter-prefix/src/rpi_flutter/CMakeLists.txt
+    GIT_REPOSITORY https://github.com/jwinarske/flutter_from_scratch.git
+    GIT_TAG clang_fixes
+    PATCH_COMMAND ""
     BUILD_IN_SOURCE 0
     UPDATE_COMMAND ""
     CMAKE_ARGS
