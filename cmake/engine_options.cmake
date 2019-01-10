@@ -102,10 +102,10 @@ if(ANDROID)
         set(TARGET_ARCH x64)
         set(APPEND_ARCH "_${TARGET_ARCH}")
     else()
+        set(TARGET_ARCH ${ANDROID_SYSROOT_ABI})
         if(ANDROID_SYSROOT_ABI STREQUAL "arm")
-            set(APPEND_ARCH "")
+            set(APPEND_ARCH "") # default architecture
         else()
-            set(TARGET_ARCH ${ANDROID_SYSROOT_ABI})
             set(APPEND_ARCH "_${TARGET_ARCH}")
         endif()
     endif()
@@ -113,7 +113,7 @@ if(ANDROID)
     set(ENGINE_FLAGS ${ENGINE_FLAGS} --${TARGET_OS} --android-cpu ${TARGET_ARCH})
 
 elseif(DARWIN)
-set(ENGINE_FLAGS ${ENGINE_FLAGS} --ios --ios-cpu ${TARGET_ARCH})  # arm,arm64
+    set(ENGINE_FLAGS ${ENGINE_FLAGS} --ios --ios-cpu ${TARGET_ARCH})  # arm,arm64
     set(TARGET_OS ios)
 else()
     set(ENGINE_FLAGS ${ENGINE_FLAGS} 

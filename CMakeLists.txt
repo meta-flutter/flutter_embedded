@@ -47,12 +47,17 @@ option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
 
 include(build_dependencies)
 
+if(ANDROID)
+    set(FLUTTER_TARGET_NAME "Android")
+else()
 
-if(BUILD_RPI_FLUTTER)
-    include(rpi)
+    if(BUILD_RPI_FLUTTER)
+        include(rpi)
 
-elseif(BUILD_WAYLAND_FLUTTER)
-    include(wayland)
+    elseif(BUILD_WAYLAND_FLUTTER)
+        include(wayland)
+
+    endif()
 
 endif()
 

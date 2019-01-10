@@ -24,26 +24,30 @@
 
 include (ExternalProject)
 
-if(NOT TARGET_ARCH)
-    set(TARGET_ARCH arm)
-endif()
+if(NOT ANDROID)
 
-if(NOT TOOLCHAIN_DIR)
-    set(BUILD_TOOLCHAIN true)
-    set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
-endif()
+    if(NOT TARGET_ARCH)
+        set(TARGET_ARCH arm)
+    endif()
 
-if(NOT LLVM_CONFIG_PATH)
-    set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
-endif()
-include(llvm_config)
+    if(NOT TOOLCHAIN_DIR)
+        set(BUILD_TOOLCHAIN true)
+        set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
+    endif()
 
-if(NOT TARGET_SYSROOT)
-    set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
-endif()
+    if(NOT LLVM_CONFIG_PATH)
+        set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
+    endif()
+    include(llvm_config)
 
-if(NOT TARGET_TRIPLE)
-    set(TARGET_TRIPLE ${TARGET_ARCH}-linux-gnueabihf)
+    if(NOT TARGET_SYSROOT)
+        set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
+    endif()
+
+    if(NOT TARGET_TRIPLE)
+        set(TARGET_TRIPLE ${TARGET_ARCH}-linux-gnueabihf)
+    endif()
+
 endif()
 
 if(NOT ENGINE_REPO)
@@ -67,11 +71,11 @@ ExternalProject_Add(engine
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/target/lib &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/target/bin &&
-        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine.so ${CMAKE_BINARY_DIR}/target/lib &&
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++.so.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++.so.1 &&
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi.so.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi.so.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++.so.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi.so.1
+        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/target/lib &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1
 )
 
 include_directories(${ENGINE_INCLUDE_DIR})
@@ -312,7 +316,7 @@ configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolch
 
 
 option(BUILD_TSLIB "Checkout and build tslib for target" ON)
-if(BUILD_TSLIB)
+if(BUILD_TSLIB AND NOT ANDROID)
     ExternalProject_Add(tslib
         GIT_REPOSITORY https://github.com/kergoth/tslib.git
         GIT_TAG 1.18
@@ -324,5 +328,7 @@ if(BUILD_TSLIB)
         -DCMAKE_BUILD_TYPE=MinSizeRel
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    add_dependencies(tslib clang)
+    if(BUILD_TOOLCHAIN)
+        add_dependencies(tslib clang)
+    endif()        
 endif()
