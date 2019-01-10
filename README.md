@@ -175,7 +175,7 @@ The sdk folder will look like this after the toolchain has built properly
 
     /usr/share/fonts/Arial.ttf
 
-If the about font is not present, you will see this error when attemping to launch Flutter
+If the above font is not present, you will see this error when attemping to launch Flutter
 
     LOG: /home/joel/git/flutter_embedded/build/rpi_flutter-prefix/src/rpi_flutter/flutter/main.cc:66: Display Size: 800 x 480
     flutter: Observatory listening on http://127.0.0.1:34949/
@@ -257,36 +257,41 @@ Copy Artifact
 
     scp {absolute build folder}/engine-prefix/src/engine/src/out/linux_debug_arm/so.unstripped/libflutter_engine.so pi@raspberrypi.local:/home/pi/lib
 
-Create Eclipse C/C++ executable project, and configure
-
-Main / C/C++ Application: flutter
-
-Main / Connection: Remote Host
-
-Main / Remote Absolute File Path for C/C++ Application: /home/pi/bin/flutter
-
-Main / Commands to execute before application
-
-    export LD_LIBRARY_PATH=/home/pi/lib
-
-Main / Skip download to target path [TRUE]
-
-Arguments: /home/pi/build/flutter_assets/
-
-Debugger / Main / GDB Debugger
-
-    gdb-multiarch
-
-Debugger / Shared Libraries
-
-    {absolute build folder}/engine-prefix/src/engine/src/out/linux_debug_arm/so.unstripped
-    {absolute sdk folder}/sysroot/lib
-    {absolute sdk folder}/toolchain/lib
-
-Debugger / Shared Libraries / Load shared library symbols automatically [TRUE]  
+Inside Eclipse - Import C/C++ Executable, and select the Flutter binary.
 
 
-Set breakpoint at FlutterEngineRun().  Run the debugger, once breakpoint hits, change to the debugger console window, and issue
+*Configuration - via Debugger Dialog*
+
+    Main / C/C++ Application: flutter
+
+    Main / Connection: Remote Host
+
+    Main / Remote Absolute File Path for C/C++ Application: /home/pi/bin/flutter
+
+    Main / Commands to execute before application
+
+        export LD_LIBRARY_PATH=/home/pi/lib
+
+    Main / Skip download to target path [TRUE]
+
+    Arguments: /home/pi/build/flutter_assets/
+
+    Debugger / Main / GDB Debugger
+
+        gdb-multiarch
+
+    Debugger / Shared Libraries
+
+        {absolute build folder}/engine-prefix/src/engine/src/out/linux_debug_arm/so.unstripped
+        {absolute sdk folder}/sysroot/lib
+        {absolute sdk folder}/toolchain/lib
+
+    Debugger / Shared Libraries / Load shared library symbols automatically [TRUE]  
+
+
+Set breakpoint at FlutterEngineRun().  
+
+Run the debugger, once breakpoint hits, change to the Debugger Console window, and issue
 
     set step-mode on
 
