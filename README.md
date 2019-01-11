@@ -7,17 +7,18 @@ See if Embedded Flutter is a compeling alternative to Chromium ContentShell+JS+C
 
 Areas of interest are memory footprint, stack latency, and where does it fit in the UI Framework landscape.
 
-I can build a ContentShell browser that with the smallest of pages, only has a 15MB system heap footprint.  As the application complexity increases, the memory usage goes up well over the 100MB mark.  This is too much for an embeded device.
+I can build a ContentShell browser that with the smallest of pages, only has a 15MB system heap footprint.  As the HTML5 application complexity increases, the memory usage ballons.  We're looking for controlled predictability.
 
-In regards to latency, my test case will be CAN bus signal from an Automotive ODBC-II connector, rendering a gauge.
+In regards to latency, one test case will be CAN bus signal from an Automotive ODBC-II connector, rendering a gauge.
 
 
 # Project Status
-Currently there are patches required for this build to run end-to-end, which affect the LLVM projects, and Flutter Engine.  After I have the patch logic implemented, I will implement a Travis-ci project.
 
-With proper patches in place, the default build configuration (provided a proper sysroot), will generate bits that execute on a Raspberry Pi.
+## * Raspberry PI bits, build out of the box on Ubunutu 18.04.1 LTS *
 
-Work Items
+The default build configuration (provided a properly configured sysroot), will generate bits that execute on a Raspberry Pi.
+
+Planned Work Items
     
     1. Memory Profiling and optimization.  With Debug engine running a simple app on the PI, it's allocating around 150MB, with 12 threads.
     2. Platform Channel handler.  This will allow Dart to call C/C++ code.  Think CAN bus, I2C, SPI, RS-232, RS-485, MIDI, Audio, Espresso Machine I/O, etc.
@@ -296,6 +297,28 @@ Run the debugger, once breakpoint hits, change to the Debugger Console window, a
     set step-mode on
 
 Step into FlutterEngineRun()
+
+# Wayland
+
+Building is currently supported using a Yocto project SDK
+
+### Yocto SDK build
+
+1. Follow steps in repo README to generate target image.  This repo is used for the DragonBoard 410c
+
+    https://github.com/96boards/oe-rpb-manifest
+
+2. Build SDK
+        
+        bitbake <image> -c populate_sdk
+
+3. Install SDK.  Default install path is /usr/local/rpb-wayland-x86_64
+
+4. Build Flutter stack using SDK for DragonBoard 410c
+
+        cd {flutter_embedded git clone root}
+        mkdir build64 && cd build64
+        cmake .. -DCMAKE_BUILD_TYPE=MinSizeRel -DTARGET_ARCH=arm64 -DTARGET_SYSROOT=/usr/local/rpb-wayland-x86_64/sysroots/aarch64-linaro-linux -DTOOLCHAIN_DIR=/usr/local/rpb-wayland-x86_64/sysroots/x86_64-oesdk-linux/usr -DTARGET_TRIPLE=aarch64-linaro-linux -DBUILD_RPI_FLUTTER=OFF -DBUILD_WAYLAND_FLUTTER=ON -DENGINE_RUNTIME_MODE=release
 
 
 # Reference Links

@@ -17,6 +17,9 @@ if(BUILD_HELLO_PI)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
+    if(BUILD_TOOLCHAIN)
+        add_dependencies(hello_pi clang)
+    endif()  
 
 endif()
 

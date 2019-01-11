@@ -1,0 +1,32 @@
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index 67e7bdc80..7d0e87244 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -568,10 +568,24 @@ config("runtime_library") {
+   # Tracked in https://fuchsia.atlassian.net/browse/TO-61
+   if (is_linux) {
+     if (current_cpu != "x86") {
+-      cflags_cc += [ "-stdlib=libc++" ]
+-      ldflags += [
++      cflags_cc += [
++        #"-ggdb",
++        #"-ggdb3",
+         "-stdlib=libc++",
+-        "-static-libstdc++",
++        "-I@TOOLCHAIN_DIR@/include",
++        "-fno-exceptions",
++        "-D_GNU_SOURCE", "-D__STDC_CONSTANT_MACROS", "-D__STDC_FORMAT_MACROS", "-D__STDC_LIMIT_MACROS"
++      ]
++
++       ldflags += [
++        "-L@TOOLCHAIN_DIR@/lib",
++        "-stdlib=libc++",
++        "--rtlib=compiler-rt",
++        "-fuse-ld=gold",
++      ]
++
++      libs += [
++        "c++abi",
+       ]
+     } else {
+       cflags_cc += [ "-stdlib=libstdc++" ]

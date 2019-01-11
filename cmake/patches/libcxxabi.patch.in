@@ -1,0 +1,43 @@
+Index: cmake/config-ix.cmake
+===================================================================
+--- cmake/config-ix.cmake	(revision 350157)
++++ cmake/config-ix.cmake	(working copy)
+@@ -16,12 +16,12 @@
+ # configuration checks to avoid spurious link errors.
+ check_c_compiler_flag(-nodefaultlibs LIBCXXABI_HAS_NODEFAULTLIBS_FLAG)
+ if (LIBCXXABI_HAS_NODEFAULTLIBS_FLAG)
+-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -nodefaultlibs")
++  #set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -nodefaultlibs")
+   if (LIBCXXABI_HAS_C_LIB)
+     list(APPEND CMAKE_REQUIRED_LIBRARIES c)
+   endif ()
+   if (LIBCXXABI_USE_COMPILER_RT)
+-    list(APPEND CMAKE_REQUIRED_FLAGS -rtlib=compiler-rt)
++    #list(APPEND CMAKE_REQUIRED_FLAGS -rtlib=compiler-rt)
+     find_compiler_rt_library(builtins LIBCXXABI_BUILTINS_LIBRARY)
+     list(APPEND CMAKE_REQUIRED_LIBRARIES "${LIBCXXABI_BUILTINS_LIBRARY}")
+   elseif (LIBCXXABI_HAS_GCC_S_LIB)
+Index: src/CMakeLists.txt
+===================================================================
+--- src/CMakeLists.txt	(revision 350157)
++++ src/CMakeLists.txt	(working copy)
+@@ -154,6 +154,10 @@
+                         POSITION_INDEPENDENT_CODE
+                           ON)
+ 
++link_directories(
++  @TOOLCHAIN_DIR@/lib
++)
++
+ # Build the shared library.
+ if (LIBCXXABI_ENABLE_SHARED)
+   add_library(cxxabi_shared SHARED $<TARGET_OBJECTS:cxxabi_objects>)
+@@ -170,7 +174,7 @@
+                           CXX_STANDARD_REQUIRED
+                             ON
+                           LINK_FLAGS
+-                            "${LIBCXXABI_LINK_FLAGS} ${LIBCXXABI_SHARED_LINK_FLAGS}"
++                            "${LIBCXXABI_LINK_FLAGS} ${LIBCXXABI_SHARED_LINK_FLAGS} -ldl"
+                           OUTPUT_NAME
+                             "c++abi"
+                           POSITION_INDEPENDENT_CODE

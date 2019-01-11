@@ -61,21 +61,35 @@ include(engine_options)
 set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 
+if(BUILD_TOOLCHAIN AND NOT ANDROID)
+    set(CXX_LIB_COPY_CMD 
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1)
+else()
+    set(CXX_LIB_COPY_CMD )
+endif()
+
+# update patch file with toolchain dirs
+configure_file(cmake/patches/engine_compiler_build.patch.in ${CMAKE_BINARY_DIR}/engine_compiler_build.patch @ONLY)
+
 find_program(gclient REQUIRED)
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
-    BUILD_IN_SOURCE 1
+    PATCH_COMMAND
+        cd src && git checkout build/config/compiler/BUILD.gn && git apply ${CMAKE_BINARY_DIR}/engine_compiler_build.patch &&
+        cd third_party/dart && git checkout runtime/BUILD.gn && git apply ${CMAKE_SOURCE_DIR}/cmake/patches/dart.patch &&
+        cd ../../..
     UPDATE_COMMAND ""
+    BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
     BUILD_COMMAND autoninja -C src/${ENGINE_OUT_DIR}
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/target/lib &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/target/bin &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/target/lib &&
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1
+        ${CXX_LIB_COPY_CMD}
 )
 
 include_directories(${ENGINE_INCLUDE_DIR})
@@ -111,7 +125,7 @@ if(BUILD_TOOLCHAIN)
         svn co http://llvm.org/svn/llvm-project/lldb/trunk lldb)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
-            cd ${LLVM_SRC_DIR}/tools && -rm -rf lldb)
+            cd ${LLVM_SRC_DIR}/tools && rm -rf lldb)
     endif()
 
     if(BUILD_COMPILER_RT)
@@ -120,7 +134,7 @@ if(BUILD_TOOLCHAIN)
             svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
-            cd ${LLVM_SRC_DIR}/projects && -rm -rf compiler-rt)
+            cd ${LLVM_SRC_DIR}/projects && rm -rf compiler-rt)
     endif()
 
     if(BUILD_LIBUNWIND)
@@ -129,7 +143,7 @@ if(BUILD_TOOLCHAIN)
             svn co http://llvm.org/svn/llvm-project/libunwind/trunk libunwind)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
-            cd ${CMAKE_BINARY_DIR} && -rm -rf libunwind)
+            cd ${CMAKE_BINARY_DIR} && rm -rf libunwind)
     endif()
 
     if(BUILD_LIBCXXABI)
@@ -138,7 +152,7 @@ if(BUILD_TOOLCHAIN)
             svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
-            cd ${LLVM_SRC_DIR}/projects && -rm -rf libcxxabi)
+            cd ${LLVM_SRC_DIR}/projects && rm -rf libcxxabi)
     endif()
     
     if(BUILD_LIBCXX)
@@ -147,7 +161,7 @@ if(BUILD_TOOLCHAIN)
             svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
-            cd ${LLVM_SRC_DIR}/projects && -rm -rf libcxx)
+            cd ${LLVM_SRC_DIR}/projects && rm -rf libcxx)
     endif()
 
     ExternalProject_Add(clang
@@ -187,6 +201,8 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_COMPILER_RT)
         ExternalProject_Add(compiler-rt
             DOWNLOAD_COMMAND ""
+            PATCH_COMMAND cd ${LLVM_SRC_DIR}/projects/compiler-rt && 
+                svn revert cmake/config-ix.cmake && svn patch ${CMAKE_SOURCE_DIR}/cmake/patches/compiler-rt.patch
             BUILD_IN_SOURCE 0
             UPDATE_COMMAND ""
             CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/compiler-rt
@@ -205,8 +221,11 @@ if(BUILD_TOOLCHAIN)
     endif()
 
     if(BUILD_LIBCXXABI)
+        configure_file(cmake/patches/libcxxabi.patch.in ${CMAKE_BINARY_DIR}/libcxxabi.patch @ONLY)
         ExternalProject_Add(libcxxabi
             DOWNLOAD_COMMAND ""
+            PATCH_COMMAND cd ${LLVM_SRC_DIR}/projects/libcxxabi && 
+                svn revert cmake/config-ix.cmake && svn patch ${CMAKE_BINARY_DIR}/libcxxabi.patch
             BUILD_IN_SOURCE 0
             UPDATE_COMMAND ""
             CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/libcxxabi
@@ -259,6 +278,8 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_LIBCXX)
         ExternalProject_Add(libcxx
             DOWNLOAD_COMMAND ""
+            PATCH_COMMAND cd ${LLVM_SRC_DIR}/projects/libcxx && 
+                svn revert cmake/config-ix.cmake && svn patch ${CMAKE_SOURCE_DIR}/cmake/patches/libcxx.patch
             BUILD_IN_SOURCE 0
             UPDATE_COMMAND ""
             CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/libcxx
@@ -330,5 +351,5 @@ if(BUILD_TSLIB AND NOT ANDROID)
     )
     if(BUILD_TOOLCHAIN)
         add_dependencies(tslib clang)
-    endif()        
+    endif()
 endif()

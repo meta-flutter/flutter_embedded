@@ -1,0 +1,21 @@
+Index: cmake/config-ix.cmake
+===================================================================
+--- cmake/config-ix.cmake	(revision 350157)
++++ cmake/config-ix.cmake	(working copy)
+@@ -26,7 +26,7 @@
+ 
+ check_c_compiler_flag(-nodefaultlibs COMPILER_RT_HAS_NODEFAULTLIBS_FLAG)
+ if (COMPILER_RT_HAS_NODEFAULTLIBS_FLAG)
+-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -nodefaultlibs")
++  #set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -nodefaultlibs")
+   if (COMPILER_RT_HAS_LIBC)
+     list(APPEND CMAKE_REQUIRED_LIBRARIES c)
+   endif ()
+@@ -52,6 +52,7 @@
+   endif()
+ endif ()
+ 
++
+ # CodeGen options.
+ check_c_compiler_flag(-ffreestanding         COMPILER_RT_HAS_FFREESTANDING_FLAG)
+ check_cxx_compiler_flag(-fPIC                COMPILER_RT_HAS_FPIC_FLAG)

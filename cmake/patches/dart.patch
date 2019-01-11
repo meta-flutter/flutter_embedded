@@ -1,0 +1,13 @@
+diff --git a/runtime/BUILD.gn b/runtime/BUILD.gn
+index ecf8a5d55c..a754002a6b 100644
+--- a/runtime/BUILD.gn
++++ b/runtime/BUILD.gn
+@@ -150,7 +150,7 @@ config("dart_config") {
+ 
+   if (!is_win) {
+     cflags = [
+-      "-Werror",
++      #"-Werror",
+       "-Wall",
+       "-Wextra",  # Also known as -W.
+       "-Wno-unused-parameter",

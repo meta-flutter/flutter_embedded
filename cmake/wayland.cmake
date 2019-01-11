@@ -1,7 +1,7 @@
 #TODO place holder
 
 set(FLUTTER_TARGET_NAME "Wayland")
-ExternalProject_Add(wayland_embedder
+ExternalProject_Add(wayland_flutter
     GIT_REPOSITORY https://github.com/chinmaygarde/flutter_wayland.git
     GIT_TAG master
     BUILD_IN_SOURCE 1
