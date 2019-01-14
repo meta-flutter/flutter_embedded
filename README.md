@@ -208,9 +208,16 @@ When adding in Linux support to the Dart code, start by adding "case TargetPlatf
 
 ## Tested Flutter Examples
 
-Known working post flutter platform patch
-
+Tested apps post Flutter Dart "linux" platfrom add
+    
+    flutter/examples/catalog * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
+    flutter/examples/flutter_gallery * key test case for platform
+    flutter/examples/flutter_view
     flutter/examples/hello_world
+    flutter/examples/layers * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
+    flutter/examples/platform_channel *requires MessageCallback impl for 100%
+    flutter/examples/platform_view * Android view not impl.. no-op btn
+    flutter/examples/stocks
     flutter-desktop-embedding/example/flutter_app
 
 Depending on the app, be preapred for Dart runtime exceptions.  Refer to https://github.com/flutter/flutter/issues
@@ -340,6 +347,10 @@ Building is currently supported using a Yocto project SDK
         bitbake <image> -c populate_sdk
 
 3. Install SDK.  Default install path is /usr/local/rpb-wayland-x86_64
+
+    *Note: the required .o files are installed in the wrong place.  You have to copy or move them to the gcc folder.*
+
+    Bug Filed: https://github.com/96boards/oe-rpb-manifest/issues/106
 
 4. Build Flutter stack using SDK for DragonBoard 410c
 

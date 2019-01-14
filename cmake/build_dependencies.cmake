@@ -176,6 +176,7 @@ if(BUILD_TOOLCHAIN)
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
             -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
+            #-DLLVM_ENABLE_PROJECTS=libcxx|libcxxabi|libunwind|compiler-rt
     )
 
     ExternalProject_Add(binutils
