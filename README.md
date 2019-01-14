@@ -191,7 +191,9 @@ If the above font is not present, you will see this error when attemping to laun
     cd <flutter git root (not this repo)>
     git apply <flutter_embedded repo>/cmake/flutter_platform.patch
 
-Not that that Flutter repo does not have TargetPlatform.linux as part of Material design.  You have to add it by hand, or override debugDefaultTargetPlatformOverride and set it to a supported one...  There are a couple of cases that need a unique implementation for Linux.  Vibrate, etc.
+Note that that Flutter repo does not have TargetPlatform.linux as part of Material design.  You have to add it by hand, or override debugDefaultTargetPlatformOverride and set it to a supported one...  There are a couple of cases that need a unique implementation for Linux.  Vibrate, etc.
+
+Apply this changelist, if not present.  https://github.com/flutter/flutter/pull/24932/files
 
 When adding in Linux support to the Dart code, start by adding "case TargetPlatform.linux:" to all switch cases found via
 

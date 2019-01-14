@@ -53,7 +53,7 @@ else()
 
     if(BUILD_RPI_FLUTTER)
         include(rpi)
-
+    
     elseif(BUILD_WAYLAND_FLUTTER)
         include(wayland)
 
