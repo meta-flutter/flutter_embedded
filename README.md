@@ -186,10 +186,34 @@ If the above font is not present, you will see this error when attemping to laun
 
     scp -r {build folder}/target/* pi@raspberrypi.local:/home/pi
 
+### Enable Linux as a Platform in your Flutter Repo
+
+    cd <flutter git root (not this repo)>
+    git apply <flutter_embedded repo>/cmake/flutter_platform.patch
+
+Not that that Flutter repo does not have TargetPlatform.linux as part of Material design.  You have to add it by hand, or override debugDefaultTargetPlatformOverride and set it to a supported one...  There are a couple of cases that need a unique implementation for Linux.  Vibrate, etc.
+
+When adding in Linux support to the Dart code, start by adding "case TargetPlatform.linux:" to all switch cases found via
+
+    cd {flutter repo}
+    grep -r "case TargetPlatform.android:"
+
 ### Build your Flutter Application
 
     cd {flutter app project folder}
     flutter build bundle
+
+*Note: You either need to override debugDefaultTargetPlatformOverride, or 
+"Enable Linux as a Platform in your Flutter Repo"*
+
+## Tested Flutter Examples
+
+Known working post flutter platform patch
+
+    flutter/examples/hello_world
+    flutter-desktop-embedding/example/flutter_app
+
+Depending on the app, be preapred for Dart runtime exceptions.  Refer to https://github.com/flutter/flutter/issues
 
 ### Push built Flutter Application to Target
 
@@ -206,6 +230,9 @@ This can be run from a SSH session, or directly on the device.  You should see o
 
     LOG: /home/joel/git/flutter_embedded/build/rpi_flutter-prefix/src/rpi_flutter/flutter/main.cc:66: Display Size: 800 x 480
     flutter: Observatory listening on http://127.0.0.1:34949/
+
+*Note: If you get unknown platform exception, you either need to override debugDefaultTargetPlatformOverride, or 
+"Enable Linux as a Platform in your Flutter Repo"*
 
 ### Raspberry Pi 7" Touch Display
 
