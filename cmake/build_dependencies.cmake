@@ -35,10 +35,11 @@ if(NOT ANDROID)
         set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
     endif()
 
-    if(NOT LLVM_CONFIG_PATH)
+    if(LLVM_CONFIG_PATH)
+        include(llvm_config)
+    else()
         set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
     endif()
-    include(llvm_config)
 
     if(NOT TARGET_SYSROOT)
         set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
@@ -176,6 +177,19 @@ if(BUILD_TOOLCHAIN)
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
             -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
+    )
+
+    # create app toolchain file
+    add_custom_command(TARGET clang POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -DTARGET_ARCH=${TARGET_ARCH}
+            -DTARGET_SYSROOT=${TARGET_SYSROOT}
+            -DTARGET_TRIPLE=${TARGET_TRIPLE}
+            -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
+            -DSRC=${CMAKE_SOURCE_DIR}
+            -DDST=${CMAKE_BINARY_DIR}
+            -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
+            -P ${CMAKE_SOURCE_DIR}/cmake/create.app.toolchain.cmake
     )
 
     ExternalProject_Add(binutils
@@ -331,9 +345,6 @@ if(BUILD_TOOLCHAIN)
     endif()
 
 endif()
-
-# Toolchain file for building apps
-configure_file(cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
 
 
 option(BUILD_TSLIB "Checkout and build tslib for target" ON)

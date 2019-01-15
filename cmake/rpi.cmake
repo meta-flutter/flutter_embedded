@@ -1,6 +1,28 @@
+#
+# MIT License
+#
+# Copyright (c) 2018 Joel Winarske
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
-
-option(BUILD_PI_USERLAND "Build Pi userland repo" OFF)
+option(BUILD_PI_USERLAND "Build Pi userland repo - !!replaces sysroot/opt/vc!!" OFF)
 if(BUILD_PI_USERLAND)
 
     ExternalProject_Add(pi_userland
@@ -40,7 +62,10 @@ if(BUILD_HELLO_PI)
     )
     if(BUILD_TOOLCHAIN)
         add_dependencies(hello_pi clang)
-    endif()  
+    endif()
+    if(BUILD_PI_USERLAND)
+        add_dependencies(hello_pi pi_userland)
+    endif()
 
 endif()
 
@@ -65,30 +90,3 @@ ExternalProject_Add(rpi_flutter
         -DENGINE_LIBRARIES_DIR=${ENGINE_LIBRARIES_DIR}
 )
 add_dependencies(rpi_flutter engine)
-
-ExternalProject_Add(sdl2
-    URL http://www.libsdl.org/release/SDL2-2.0.9.tar.gz
-    URL_MD5 f2ecfba915c54f7200f504d8b48a5dfe
-    PATCH_COMMAND "" #create symlink to dbus-1
-    UPDATE_COMMAND ""
-    CMAKE_ARGS
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-        -DPULSEAUDIO=OFF
-        -DPULSEAUDIO_SHARED=OFF
-        -DVIDEO_KMSDRM=OFF
-        -DVIDEO_VULKAN=OFF
-)
-
-#ExternalProject_Add(glus
-    #GIT_REPOSITORY https://github.com/McNopper/GLUS.git
-    #GIT_TAG v2.0
-    #UPDATE_COMMAND ""
-    #CMAKE_ARGS ../glus/GLUS
-        #-DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
-        #-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
-        #-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        #-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-#)

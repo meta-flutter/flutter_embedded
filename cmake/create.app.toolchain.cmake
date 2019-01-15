@@ -22,23 +22,36 @@
 # SOFTWARE.
 #
 
-SET(CMAKE_SYSTEM_VERSION 1)
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR @TARGET_ARCH@)
+cmake_minimum_required(VERSION 3.11)
 
-#compiler
-SET(CMAKE_C_COMPILER @TOOLCHAIN_DIR@/bin/clang)
-SET(CMAKE_CXX_COMPILER @TOOLCHAIN_DIR@/bin/clang++)
+message(STATUS "llvm-config ............ ${LLVM_CONFIG_PATH}")
 
-# sysroot
-SET(CMAKE_SYSROOT @TARGET_SYSROOT@)
-SET(CMAKE_FIND_ROOT_PATH @TARGET_SYSROOT@)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CONFIG_COMMAND ${LLVM_CONFIG_PATH}
+    "--cflags"
+    "--cxxflags"
+    "--ldflags")
 
-# compiler flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --target=@TARGET_TRIPLE@ -v")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=@TARGET_TRIPLE@ -v")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nodefaultlibs -L@TOOLCHAIN_DIR@/lib -lc -fuse-ld=gold -v")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nodefaultlibs -L@TOOLCHAIN_DIR@/lib -lc -fuse-ld=gold -v")
+execute_process(
+    COMMAND ${CONFIG_COMMAND}
+    RESULT_VARIABLE HAD_ERROR
+    OUTPUT_VARIABLE CONFIG_OUTPUT
+)
+
+if(NOT HAD_ERROR)
+    string(REGEX REPLACE "[ \t]*[\r\n]+[ \t]*" ";" CONFIG_OUTPUT ${CONFIG_OUTPUT})
+else()
+    string(REPLACE ";" " " CONFIG_COMMAND_STR "${CONFIG_COMMAND}")
+    message(STATUS "${CONFIG_COMMAND_STR}")
+    message(FATAL_ERROR "llvm-config failed with status ${HAD_ERROR}")
+endif()
+
+list(GET CONFIG_OUTPUT 0 __CFLAGS)
+list(GET CONFIG_OUTPUT 1 __CXXFLAGS)
+list(GET CONFIG_OUTPUT 2 __LDFLAGS)
+
+set(LLVM_CFLAGS ${__CFLAGS} CACHE PATH "llvm c flags")
+set(LLVM_CXXFLAGS ${__CXXFLAGS} CACHE PATH "llvm cxx flags")
+set(LLVM_LDFLAGS ${__LDFLAGS} CACHE PATH "llvm linker flags")
+
+
+configure_file(${SRC}/cmake/app.clang.toolchain.cmake.in ${DST}/app.toolchain.cmake @ONLY)
