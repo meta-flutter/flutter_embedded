@@ -1,5 +1,6 @@
 include(ExternalProject)
 
+find_program(ln REQUIRED)
 find_program(tar REQUIRED)
 find_program(wget REQUIRED)
 
@@ -19,5 +20,29 @@ ExternalProject_Add(sysroot
       cd ${SYSROOT} &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./opt/vc/ &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./lib/ &&
-      tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/
+      tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/ &&
+      # fix dangling symlinks
+      cd ./usr/lib/arm-linux-gnueabihf &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.8 libdl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.8 libz.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/librt.so.1 librt.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_nisplus.so.2 libnss_nisplus.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libdl.so.2 libdl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_files.so.2 libnss_files.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libm.so.6 libm.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libutil.so.1 libutil.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libresolv.so.2 libresolv.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnsl.so.1 libnsl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libBrokenLocale.so.1 libBrokenLocale.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libthread_db.so.1 libthread_db.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libanl.so.1 libanl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_nis.so.2 libnss_nis.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libmnl.so.0.2.0 libmnl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libmnl.so.0.2.0 libmnl.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libcidn.so.1 libcidn.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_compat.so.2 libnss_compat.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libcrypt.so.1 libcrypt.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libexpat.so.1.6.2 libexpat.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_hesiod.so.2 libnss_hesiod.so &&
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_dns.so.2 libnss_dns.so
 )
