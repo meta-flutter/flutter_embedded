@@ -45,7 +45,9 @@ message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 option(BUILD_RPI_FLUTTER "Build Flutter for Raspberry Pi" ON)
 option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
 
-include(build_dependencies)
+include(build_toolchain)
+include(build_engine)
+include(build_tslib)
 
 if(ANDROID)
     set(FLUTTER_TARGET_NAME "Android")
