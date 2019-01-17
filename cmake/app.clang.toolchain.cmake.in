@@ -37,9 +37,64 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+
+#
+# variable cache
+#
+set(LLVM_VERSION "$ENV{_LLVM_VERSION}")
+set(LLVM_CFLAGS "$ENV{_LLVM_CFLAGS}")
+set(LLVM_CXXFLAGS "$ENV{_LLVM_CXXFLAGS}")
+set(LLVM_LDFLAGS "$ENV{_LLVM_LDFLAGS}")
+
+if (NOT LLVM_VERSION)
+    message(STATUS "llvm-config ............ @LLVM_CONFIG_PATH@")
+
+    set(CONFIG_COMMAND @LLVM_CONFIG_PATH@
+        "--version"
+        "--cflags"
+        "--cxxflags"
+        "--ldflags"
+        )
+
+    execute_process(
+        COMMAND ${CONFIG_COMMAND}
+        RESULT_VARIABLE HAD_ERROR
+        OUTPUT_VARIABLE CONFIG_OUTPUT
+    )
+
+    if(NOT HAD_ERROR)
+        string(REGEX REPLACE "[ \t]*[\r\n]+[ \t]*" ";" CONFIG_OUTPUT ${CONFIG_OUTPUT})
+    else()
+        string(REPLACE ";" " " CONFIG_COMMAND_STR "${CONFIG_COMMAND}")
+        message(STATUS "${CONFIG_COMMAND_STR}")
+        message(FATAL_ERROR "llvm-config failed with status ${HAD_ERROR}")
+    endif()
+
+    list(GET CONFIG_OUTPUT 0 __VERSION)
+    list(GET CONFIG_OUTPUT 1 __CFLAGS)
+    list(GET CONFIG_OUTPUT 2 __CXXFLAGS)
+    list(GET CONFIG_OUTPUT 3 __LDFLAGS)
+
+    string(REGEX REPLACE "svn" "" __VERSION ${__VERSION})
+    
+    set(LLVM_VERSION ${__VERSION} CACHE PATH "llvm version")
+    set(LLVM_CFLAGS ${__CFLAGS} CACHE PATH "llvm c flags")
+    set(LLVM_CXXFLAGS ${__CXXFLAGS} CACHE PATH "llvm cxx flags")
+    set(LLVM_LDFLAGS ${__LDFLAGS} CACHE PATH "llvm linker flags")
+
+
+    set(ENV{_LLVM_VERSION} "${LLVM_VERSION}")
+    set(ENV{_LLVM_CFLAGS} "${LLVM_CFLAGS}")
+    set(ENV{_LLVM_CXXFLAGS} "${LLVM_CXXFLAGS}")
+    set(ENV{_LLVM_LDFLAGS} "${LLVM_LDFLAGS}")
+endif ()
+
+
 # compiler flags
-set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} --target=@TARGET_TRIPLE@ -fno-integrated-as") # userland gas asm needs this
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --target=@TARGET_TRIPLE@ @LLVM_CFLAGS@")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=@TARGET_TRIPLE@ -stdlib=libc++ @LLVM_CXXFLAGS@")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} @LLVM_LDFLAGS@  --rtlib=compiler-rt -fuse-ld=gold") # -v
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} @LLVM_LDFLAGS@ --rtlib=compiler-rt -fuse-ld=gold") # -v
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} --target=@TARGET_TRIPLE@ -fno-integrated-as")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --target=@TARGET_TRIPLE@ ${LLVM_CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=@TARGET_TRIPLE@ -stdlib=libc++ ${LLVM_CXXFLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS} --rtlib=compiler-rt -fuse-ld=gold")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LLVM_LDFLAGS} --rtlib=compiler-rt -fuse-ld=gold")
+
+set(ENV{PKG_CONFIG_PATH}  "@PKG_CONFIG_PATH@")

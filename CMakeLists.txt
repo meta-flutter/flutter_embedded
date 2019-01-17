@@ -24,6 +24,15 @@
 
 cmake_minimum_required(VERSION 3.11)
 
+if(POLICY CMP0068)
+  cmake_policy(SET CMP0068 NEW)
+  set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
+endif()
+
+if(POLICY CMP0075)
+  cmake_policy(SET CMP0075 NEW)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
     message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to MinSizeRel.")
@@ -42,8 +51,16 @@ project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 
+option(BUILD_SYSROOT "Build sysroot" ON)
+
 option(BUILD_RPI_FLUTTER "Build Flutter for Raspberry Pi" ON)
 option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
+
+if(BUILD_SYSROOT)
+    if(BUILD_RPI_FLUTTER)
+        include(rpi.sysroot)
+    endif()
+endif()
 
 include(build_dependencies)
 

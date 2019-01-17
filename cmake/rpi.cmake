@@ -22,12 +22,17 @@
 # SOFTWARE.
 #
 
+# create app toolchain file
+set(PKG_CONFIG_PATH ${TARGET_SYSROOT}/opt/vc/lib/pkgconfig)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
+
 option(BUILD_PI_USERLAND "Build Pi userland repo - !!replaces sysroot/opt/vc!!" OFF)
 if(BUILD_PI_USERLAND)
 
     ExternalProject_Add(pi_userland
         GIT_REPOSITORY https://github.com/jwinarske/userland.git
         GIT_TAG vidtext_fix
+        GIT_SHALLOW true
         BUILD_IN_SOURCE 0
         PATCH_COMMAND rm -rf ${TARGET_SYSROOT}/opt/vc
         UPDATE_COMMAND ""
@@ -38,12 +43,15 @@ if(BUILD_PI_USERLAND)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
+    if(BUILD_SYSROOT)    
+        add_dependencies(pi_userland sysroot)
+    endif()        
     if(BUILD_TOOLCHAIN)
-        add_dependencies(pi_userland clang)
+        add_dependencies(pi_userland binutils)
     endif()
-    if(BUILD_COMPILER-RT)
+    if(BUILD_COMPILER_RT)
         add_dependencies(pi_userland compiler-rt)
-    endif()  
+    endif()
 
 endif()
 
@@ -64,10 +72,13 @@ if(BUILD_HELLO_PI)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
+    if(BUILD_SYSROOT)
+        add_dependencies(hello_pi sysroot)
+    endif()    
     if(BUILD_TOOLCHAIN)
-        add_dependencies(hello_pi clang)
+        add_dependencies(hello_pi binutils)
     endif()
-    if(BUILD_COMPILER-RT)
+    if(BUILD_COMPILER_RT)
         add_dependencies(hello_pi compiler-rt)
     endif()
     if(BUILD_PI_USERLAND)
@@ -85,6 +96,7 @@ set(FLUTTER_TARGET_NAME "Raspberry Pi")
 ExternalProject_Add(rpi_flutter
     GIT_REPOSITORY https://github.com/jwinarske/flutter_from_scratch.git
     GIT_TAG clang_fixes
+    GIT_SHALLOW true
     PATCH_COMMAND ""
     BUILD_IN_SOURCE 0
     UPDATE_COMMAND ""
@@ -96,4 +108,7 @@ ExternalProject_Add(rpi_flutter
         -DENGINE_INCLUDE_DIR=${ENGINE_INCLUDE_DIR}
         -DENGINE_LIBRARIES_DIR=${ENGINE_LIBRARIES_DIR}
 )
+if(BUILD_SYSROOT)
+    add_dependencies(rpi_flutter sysroot)
+endif()    
 add_dependencies(rpi_flutter engine)

@@ -35,11 +35,7 @@ if(NOT ANDROID)
         set(TOOLCHAIN_DIR ${CMAKE_SOURCE_DIR}/sdk/toolchain)
     endif()
 
-    if(LLVM_CONFIG_PATH)
-        include(llvm_config)
-    else()
-        set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
-    endif()
+    set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
 
     if(NOT TARGET_SYSROOT)
         set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
@@ -51,50 +47,6 @@ if(NOT ANDROID)
 
 endif()
 
-if(NOT ENGINE_REPO)
-    set(ENGINE_REPO https://github.com/flutter/engine.git)
-endif()
-
-set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
-configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
-include(engine_options)
-
-set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
-set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
-
-if(BUILD_TOOLCHAIN AND NOT ANDROID)
-    set(CXX_LIB_COPY_CMD 
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
-        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1)
-else()
-    set(CXX_LIB_COPY_CMD )
-endif()
-
-# update patch file with toolchain dirs
-configure_file(cmake/patches/engine_compiler_build.patch.in ${CMAKE_BINARY_DIR}/engine_compiler_build.patch @ONLY)
-
-find_program(gclient REQUIRED)
-ExternalProject_Add(engine
-    DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
-    PATCH_COMMAND
-        cd src && git checkout build/config/compiler/BUILD.gn && git apply ${CMAKE_BINARY_DIR}/engine_compiler_build.patch &&
-        cd third_party/dart && git checkout runtime/BUILD.gn && git apply ${CMAKE_SOURCE_DIR}/cmake/patches/dart.patch &&
-        cd ../../..
-    UPDATE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
-    BUILD_COMMAND autoninja -C src/${ENGINE_OUT_DIR}
-    INSTALL_COMMAND
-        ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/target/lib &&
-        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/target/bin &&
-        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/target/lib &&
-        ${CXX_LIB_COPY_CMD}
-)
-
-include_directories(${ENGINE_INCLUDE_DIR})
-link_directories(${ENGINE_LIBRARIES_DIR})
 
 
 if(BUILD_TOOLCHAIN)
@@ -173,23 +125,12 @@ if(BUILD_TOOLCHAIN)
         LIST_SEPARATOR |
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
             -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
-    )
-
-    # create app toolchain file
-    add_custom_command(TARGET clang POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-            -DTARGET_ARCH=${TARGET_ARCH}
-            -DTARGET_SYSROOT=${TARGET_SYSROOT}
-            -DTARGET_TRIPLE=${TARGET_TRIPLE}
-            -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
-            -DSRC=${CMAKE_SOURCE_DIR}
-            -DDST=${CMAKE_BINARY_DIR}
-            -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
-            -P ${CMAKE_SOURCE_DIR}/cmake/create.app.toolchain.cmake
+            -DLLVM_ENABLE_ASSERTIONS=ON
+            -DLIBCXX_INSTALL_LIBRARY=OFF
     )
 
     ExternalProject_Add(binutils
@@ -221,17 +162,20 @@ if(BUILD_TOOLCHAIN)
             UPDATE_COMMAND ""
             CONFIGURE_COMMAND ${CMAKE_COMMAND} ${LLVM_SRC_DIR}/projects/compiler-rt
                 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/toolchain.cmake
-                -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}/lib/clang/8.0.0
+                -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}/lib/clang/9.0.0
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
                 -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
-                -DCOMPILER_RT_STANDALONE_BUILD=ON
+                -DCOMPILER_RT_STANDALONE_BUILD=OFF
                 -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DCOMPILER_RT_HAS_FPIC_FLAG=ON
                 -DCOMPILER_RT_BUILD_XRAY=ON
                 -DCOMPILER_RT_BUILD_SANITIZERS=ON
         )
         add_dependencies(compiler-rt clang binutils)
+        if(BUILD_SYSROOT)
+            add_dependencies(compiler-rt sysroot)
+        endif()
     endif()
 
     if(BUILD_LIBCXXABI)
@@ -253,11 +197,18 @@ if(BUILD_TOOLCHAIN)
                 -DLIBCXXABI_ENABLE_SHARED=ON
                 -DLIBCXXABI_USE_COMPILER_RT=${BUILD_COMPILER_RT}
                 -DLIBCXXABI_USE_LLVM_UNWINDER=${BUILD_LIBUNWIND}
+                -DLIBCXXABI_ENABLE_STATIC_UNWINDER=${BUILD_LIBUNWIND}
+                -DLIBCXXABI_ENABLE_EXCEPTIONS=OFF
+                -DLIBCXXABI_ENABLE_ASSERTIONS=ON
+                -DLIBCXXABI_ENABLE_PEDANTIC=ON
         )
         add_dependencies(libcxxabi clang binutils)
         if(BUILD_COMPILER_RT)
             add_dependencies(libcxxabi compiler-rt)
         endif()
+        if(BUILD_SYSROOT)
+            add_dependencies(libcxxabi sysroot)
+        endif()        
     endif()
 
     if(BUILD_LIBUNWIND)
@@ -271,7 +222,7 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
                 -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
-                -DLIBUNWIND_STANDALONE_BUILD=ON
+                -DLIBUNWIND_STANDALONE_BUILD=OFF
                 -DLIBUNWIND_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBUNWIND_SYSROOT=${TARGET_SYSROOT}
                 -DLIBUNWIND_USE_COMPILER_RT=${BUILD_COMPILER_RT}
@@ -287,6 +238,9 @@ if(BUILD_TOOLCHAIN)
         if(BUILD_LIBCXXABI AND BUILD_LIBUNWIND)
             add_dependencies(libcxxabi libunwind)
         endif()
+        if(BUILD_SYSROOT)
+            add_dependencies(libunwind sysroot)
+        endif()        
     endif()
 
     if(BUILD_LIBCXX)
@@ -302,18 +256,21 @@ if(BUILD_TOOLCHAIN)
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
                 -DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH}
+                -DLIBCXX_STANDALONE_BUILD=OFF
                 -DLIBCXX_SYSROOT=${TARGET_SYSROOT}
                 -DLIBCXX_TARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLIBCXX_USE_COMPILER_RT=${BUILD_COMPILER_RT}
                 -DLIBCXX_ENABLE_SHARED=ON
+                -DLIBCXXABI_USE_LLVM_UNWINDER=${BUILD_LIBUNWIND}
+                -DLIBCXXABI_ENABLE_STATIC_UNWINDER=${BUILD_LIBUNWIND}
         )
         add_dependencies(libcxx libcxxabi)
         if(BUILD_COMPILER_RT)
             add_dependencies(libcxx compiler-rt)
         endif()
-        if(BUILD_LIBCXX)
-            add_dependencies(engine libcxx)
-        endif()
+        if(BUILD_SYSROOT)
+            add_dependencies(libcxx sysroot)
+        endif()        
     endif()
 
     
@@ -347,11 +304,65 @@ if(BUILD_TOOLCHAIN)
 endif()
 
 
+
+if(NOT ENGINE_REPO)
+    set(ENGINE_REPO https://github.com/flutter/engine.git)
+endif()
+
+set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
+configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
+include(engine_options)
+
+set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
+
+if(BUILD_TOOLCHAIN AND NOT ANDROID)
+    set(CXX_LIB_COPY_CMD 
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        ${CMAKE_COMMAND} -E copy ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
+        chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1)
+else()
+    set(CXX_LIB_COPY_CMD )
+endif()
+
+# update patch file with toolchain dirs
+configure_file(cmake/patches/engine_compiler_build.patch.in ${CMAKE_BINARY_DIR}/engine_compiler_build.patch @ONLY)
+
+find_program(gclient REQUIRED)
+ExternalProject_Add(engine
+    DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
+    PATCH_COMMAND
+        cd src && git checkout build/config/compiler/BUILD.gn && git apply ${CMAKE_BINARY_DIR}/engine_compiler_build.patch &&
+        cd third_party/dart && git checkout runtime/BUILD.gn && git apply ${CMAKE_SOURCE_DIR}/cmake/patches/dart.patch &&
+        cd ../../..
+    UPDATE_COMMAND ""
+    BUILD_IN_SOURCE 1
+    CONFIGURE_COMMAND src/flutter/tools/gn ${ENGINE_FLAGS}
+    BUILD_COMMAND autoninja -C src/${ENGINE_OUT_DIR}
+    INSTALL_COMMAND
+        ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/target/lib &&
+        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/target/bin &&
+        ${CMAKE_COMMAND} -E copy ${ENGINE_LIBRARIES_DIR}/libflutter_engine${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/target/lib &&
+        ${CXX_LIB_COPY_CMD}
+)
+if(BUILD_LIBCXX)
+    add_dependencies(engine libcxx)
+endif()
+if(BUILD_SYSROOT)
+    add_dependencies(engine sysroot)
+endif()
+
+include_directories(${ENGINE_INCLUDE_DIR})
+link_directories(${ENGINE_LIBRARIES_DIR})
+
+
 option(BUILD_TSLIB "Checkout and build tslib for target" ON)
 if(BUILD_TSLIB AND NOT ANDROID)
     ExternalProject_Add(tslib
-        GIT_REPOSITORY https://github.com/kergoth/tslib.git
-        GIT_TAG 1.18
+        GIT_REPOSITORY https://github.com/jwinarske/tslib.git
+        GIT_TAG cxx_link_fix
+        GIT_SHALLOW true
         BUILD_IN_SOURCE 0
         UPDATE_COMMAND ""
         CMAKE_ARGS
@@ -363,7 +374,10 @@ if(BUILD_TSLIB AND NOT ANDROID)
     if(BUILD_TOOLCHAIN)
         add_dependencies(tslib clang)
     endif()
-    if(BUILD_COMPILER-RT)
+    if(BUILD_COMPILER_RT)
         add_dependencies(tslib compiler-rt)
     endif()
+    if(BUILD_SYSROOT)
+        add_dependencies(tslib sysroot)
+    endif()        
 endif()
