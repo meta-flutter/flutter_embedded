@@ -31,7 +31,7 @@ if(NOT ANDROID)
     if(NOT TOOLCHAIN_DIR AND NOT BUILD_TOOLCHAIN)
         message(FATAL_ERROR "No toolchain specified and build toolchain not enabled, cannot continue.")
     endif()
-    
+
 endif()
 
 if(BUILD_TOOLCHAIN)
@@ -62,14 +62,14 @@ if(BUILD_TOOLCHAIN)
 
     set(LLVM_CHECKOUT
         cd ${CMAKE_BINARY_DIR} &&
-        svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm &&
+        svn co http://llvm.org/svn/llvm-project/llvm/${USE_LLVM_BRANCH} llvm &&
         cd ${LLVM_SRC_DIR}/tools &&
-        svn co http://llvm.org/svn/llvm-project/cfe/trunk clang)
+        svn co http://llvm.org/svn/llvm-project/cfe/${USE_LLVM_BRANCH} clang)
 
     if(BUILD_LLDB)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
         cd ${LLVM_SRC_DIR}/tools &&
-        svn co http://llvm.org/svn/llvm-project/lldb/trunk lldb)
+        svn co http://llvm.org/svn/llvm-project/lldb/${USE_LLVM_BRANCH} lldb)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/tools && rm -rf lldb)
@@ -78,7 +78,7 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_COMPILER_RT)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${LLVM_SRC_DIR}/projects &&
-            svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt)
+            svn co http://llvm.org/svn/llvm-project/compiler-rt/${USE_LLVM_BRANCH} compiler-rt)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/projects && rm -rf compiler-rt)
@@ -87,7 +87,7 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_LIBUNWIND)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${CMAKE_BINARY_DIR} &&
-            svn co http://llvm.org/svn/llvm-project/libunwind/trunk libunwind)
+            svn co http://llvm.org/svn/llvm-project/libunwind/${USE_LLVM_BRANCH} libunwind)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${CMAKE_BINARY_DIR} && rm -rf libunwind)
@@ -96,7 +96,7 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_LIBCXXABI)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/projects &&
-            svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi)
+            svn co http://llvm.org/svn/llvm-project/libcxxabi/${USE_LLVM_BRANCH} libcxxabi)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/projects && rm -rf libcxxabi)
@@ -105,7 +105,7 @@ if(BUILD_TOOLCHAIN)
     if(BUILD_LIBCXX)
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} &&
             cd ${LLVM_SRC_DIR}/projects &&
-            svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx)
+            svn co http://llvm.org/svn/llvm-project/libcxx/${USE_LLVM_BRANCH} libcxx)
     else()
         set(LLVM_CHECKOUT ${LLVM_CHECKOUT} && 
             cd ${LLVM_SRC_DIR}/projects && rm -rf libcxx)

@@ -36,6 +36,12 @@ else()
     set(LLVM_CONFIG_PATH ${TOOLCHAIN_DIR}/bin/llvm-config CACHE PATH "llvm-config path")
 endif()
 
+if (USE_LLVM_BRANCH)
+    set(USE_LLVM_BRANCH branches/${USE_LLVM_BRANCH})
+else()
+    set(USE_LLVM_BRANCH trunk)
+endif()
+
 if(NOT TARGET_SYSROOT)
     set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
 endif()
