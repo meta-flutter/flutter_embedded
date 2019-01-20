@@ -41,12 +41,11 @@ Planned Targets in no particular order (I can be persuaded with money to support
 
     http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 
-3. I would recommend replicating these two pages, to ensure your machine is configured and working prior to diving into automation scripts.
+3. Confirm you can build the engine repo standalone
 
     https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
 
     https://github.com/flutter/flutter/wiki/Compiling-the-engine
-
 
 # Build Tip-Of-Tree Clang, Latest Binutils, and Flutter Engine master branch for Linux arm
 
@@ -62,7 +61,6 @@ Note: Your build folder can be wherever you want...
 To use the override variables, pass them in with the cmake command.  One example
 
     cmake -DTOOLCHAIN_DIR=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 -DTARGET_SYSROOT=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DTARGET_TRIPLE=arm-linux-androideabi-clang -DENGINE_REPO=https://github.com/jwinarske/engine -GNinja -DCMAKE_BUILD_TYPE=Debug
-
 
 ### TOOLCHAIN_DIR
 This is the directory of the installed toolchain.  The default value used is "${CMAKE_SOURCE_DIR}/sdk/toolchain".  When the toolchain is built, it's installed to this directory.  If TOOLCHAIN_DIR is not set, it will build the toolchain.
@@ -142,7 +140,15 @@ Example building Android engine.  The flutter engine uses it's own NDK copy.  So
 
 To generate target binaries for a Raspberry Pi, you need a valid sysroot, prior to building
 
-### sysroot
+### sysroot - Default
+
+    I dynamically create the target sysroot from this rootfs archive:
+        https://downloads.raspberrypi.org/raspbian/archive/2018-11-15-21:02/root.tar.xz
+
+    The resultant build artifacts are compatible with any 2018-11-15 Raspbian image.  If you need a different rootfs version, you will need to update the wget command in flutter_embedded/cmake/rpi.sysroot.cmake.
+
+### sysroot - Override / create from Raspbian img file
+
 Download Raspbian Lite image from Raspbian Image Download Page
 
     https://downloads.raspberrypi.org/raspbian_lite_latest
@@ -154,7 +160,7 @@ Extract the archive, which will give you a .img file. If on Ubuntu Bionic, doubl
     cp -r lib {flutter_embedded git clone root}/sdk/sysroot
     cp -r opt {flutter_embedded git clone root}/sdk/sysroot
     cp -r usr {flutter_embedded git clone root}/sdk/sysroot
-    
+
 ### sdk folder
 
 The sdk folder will look like this after the toolchain has built properly
@@ -172,15 +178,28 @@ The sdk folder will look like this after the toolchain has built properly
         |-- libexec
         `-- share
 
-### Default Font Requirement
+### Flutter Engine Default Font for Linux
 
-    /usr/share/fonts/Arial.ttf
+    Arial.ttf
 
-If the above font is not present, you will see this error when attemping to launch Flutter
+Check your target using
+
+    fc-match Arial
+
+It should return    
+
+    Arial.ttf: "Arial" "Normal"
+
+If the Arial font is not present, you get this fatal error when attemping to launch Flutter
 
     LOG: /home/joel/git/flutter_embedded/build/rpi_flutter-prefix/src/rpi_flutter/flutter/main.cc:66: Display Size: 800 x 480
     flutter: Observatory listening on http://127.0.0.1:34949/
     [ERROR:flutter/third_party/txt/src/minikin/FontFamily.cpp(184)] Could not get cmap table size!
+
+### Install Arial Font
+
+    sudo apt-get install ttf-mscorefonts-installer
+    sudo fc-cache
 
 ### Push Native Flutter build artifacts to Target
 
