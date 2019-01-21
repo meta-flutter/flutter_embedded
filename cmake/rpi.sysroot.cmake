@@ -21,7 +21,7 @@ ExternalProject_Add(sysroot
       tar -xvf ${ROOT_ARCHIVE_PATH} ./opt/vc/ &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./lib/ &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/ &&
-      # fix dangling symlinks
+      # dangling symlinks
       cd ./usr/lib/arm-linux-gnueabihf &&
       ln -f -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.8 libdl.so &&
       ln -f -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.8 libz.so &&
@@ -44,5 +44,7 @@ ExternalProject_Add(sysroot
       ln -f -s ../../../lib/arm-linux-gnueabihf/libcrypt.so.1 libcrypt.so &&
       ln -f -s ../../../lib/arm-linux-gnueabihf/libexpat.so.1.6.2 libexpat.so &&
       ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_hesiod.so.2 libnss_hesiod.so &&
-      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_dns.so.2 libnss_dns.so
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libnss_dns.so.2 libnss_dns.so &&
+      # missing symlinks
+      ln -f -s ../../../lib/arm-linux-gnueabihf/libdbus-1.so.3 libdbus-1.so
 )
