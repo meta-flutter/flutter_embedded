@@ -47,6 +47,10 @@ Planned Targets in no particular order (I can be persuaded with money to support
 
     https://github.com/flutter/flutter/wiki/Compiling-the-engine
 
+    Note: If you're running Ubuntu Bionic, you can use this shell file to setup your build dependencies:
+
+        install-build-deps.sh
+
 # Build Tip-Of-Tree Clang, Latest Binutils, and Flutter Engine master branch for Linux arm
 
     git clone https://github.com/jwinarske/flutter_embedded

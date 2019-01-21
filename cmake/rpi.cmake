@@ -55,7 +55,7 @@ if(BUILD_PI_USERLAND)
 
 endif()
 
-option(BUILD_HELLO_PI "Build the apps in /opt/vc/src/hello_pi" ON)
+option(BUILD_HELLO_PI "Build the apps in {sysroot}/opt/vc/src/hello_pi" ON)
 if(BUILD_HELLO_PI)
 
     # These are C apps...

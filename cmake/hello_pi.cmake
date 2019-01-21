@@ -53,7 +53,7 @@ add_definitions(
     -fPIC -DPIC -DUSE_VCHIQ_ARM -DHAVE_LIBOPENMAX=2
     -DUSE_EXTERNAL_OMX -DOMX -DOMX_SKIP64BIT)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U_FORTIFY_SOURCE -Wall -g -ftree-vectorize -pipe")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U_FORTIFY_SOURCE -Wall -g -ftree-vectorize -pipe -Wno-deprecated-declarations")
 
 add_library(ilclient STATIC libs/ilclient/ilclient.c libs/ilclient/ilcore.c)
 add_library(vgfont STATIC libs/vgfont/font.c libs/vgfont/graphics.c libs/vgfont/vgft.c)
@@ -82,11 +82,12 @@ add_executable(hello_fft_2d ${hello_fft_src} hello_fft/hello_fft_2d.c hello_fft/
 target_link_libraries(hello_fft_2d m dl)
 
 add_executable(hello_font hello_font/main.c)
-target_link_libraries(hello_font vgfont freetype z brcmEGL bcm_host vcos pthread)
+target_link_libraries(hello_font vgfont freetype z brcmGLESv2 brcmEGL openmaxil
+    bcm_host vcos vchiq_arm pthread brcmEGL bcm_host vcos pthread)
 add_dependencies(hello_font vgfont)
 
 add_executable(hello_jpeg hello_jpeg/jpeg.c)
-target_link_libraries(hello_jpeg ilclient openmaxil bcm_host vcos vchiq_arm pthread)
+target_link_libraries(hello_jpeg ilclient brcmGLESv2 brcmEGL openmaxil bcm_host vcos vchiq_arm pthread)
 add_dependencies(hello_jpeg ilclient)
 
 add_executable(hello_mmal_encode hello_mmal_encode/mmal_encode.c)
@@ -98,7 +99,7 @@ target_link_libraries(hello_teapot ilclient m brcmGLESv2 brcmEGL openmaxil bcm_h
 add_dependencies(hello_mmal_encode ilclient)
 
 add_executable(hello_tiger hello_tiger/main.c hello_tiger/tiger.c)
-target_link_libraries(hello_tiger brcmEGL bcm_host vcos)
+target_link_libraries(hello_tiger brcmGLESv2 brcmEGL openmaxil bcm_host vcos vchiq_arm pthread)
 target_compile_definitions(hello_tiger PRIVATE -D__RASPBERRYPI__)
 
 add_executable(hello_triangle hello_triangle/triangle.c)
