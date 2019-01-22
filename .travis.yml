@@ -34,5 +34,4 @@ before_script:
   - cmake .. ${CMAKE_ARGS}
 
 script:
-  # - autoninja  # causes travis-ci build to fail, as it thinks it's non-responsive...
-  - make -j`grep -c ^processor /proc/cpuinfo`
+  - make # clang build currently breaks with this... -j`grep -c ^processor /proc/cpuinfo`
