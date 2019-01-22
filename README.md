@@ -14,6 +14,8 @@ In regards to latency, one test case will be CAN bus signal from an Automotive O
 
 # Project Status
 
+[![Build Status](https://travis-ci.com/jwinarske/flutter_embedded.svg?branch=master)](https://travis-ci.com/jwinarske/flutter_embedded)
+
 ## * Raspberry PI bits, build out of the box on Ubunutu 18.04.1 LTS *
 
 The default build configuration (provided a properly configured sysroot), will generate bits that execute on a Raspberry Pi.

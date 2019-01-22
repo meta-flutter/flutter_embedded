@@ -10,7 +10,7 @@ set(ROOT_ARCHIVE root.tar.xz)
 set(ROOT_ARCHIVE_PATH ${CMAKE_BINARY_DIR}/sysroot-prefix/src/${ROOT_ARCHIVE})
 
 ExternalProject_Add(sysroot
-    DOWNLOAD_COMMAND wget https://downloads.raspberrypi.org/raspbian/archive/2018-11-15-21:02/${ROOT_ARCHIVE}
+    DOWNLOAD_COMMAND wget -nv https://downloads.raspberrypi.org/raspbian/archive/2018-11-15-21:02/${ROOT_ARCHIVE}
     UPDATE_COMMAND ""
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${CMAKE_COMMAND} -E remove_directory ${SYSROOT}
@@ -18,9 +18,9 @@ ExternalProject_Add(sysroot
     INSTALL_COMMAND 
       ${CMAKE_COMMAND} -E make_directory ${SYSROOT} && 
       cd ${SYSROOT} &&
-      tar -xvf ${ROOT_ARCHIVE_PATH} ./opt/vc/ &&
-      tar -xvf ${ROOT_ARCHIVE_PATH} ./lib/ &&
-      tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/ &&
+      tar -xvf ${ROOT_ARCHIVE_PATH} ./opt/vc/ > /dev/null &&
+      tar -xvf ${ROOT_ARCHIVE_PATH} ./lib/ > /dev/null &&
+      tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/ > /dev/null &&
       # dangling symlinks
       cd ./usr/lib/arm-linux-gnueabihf &&
       ln -f -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.8 libdl.so &&
