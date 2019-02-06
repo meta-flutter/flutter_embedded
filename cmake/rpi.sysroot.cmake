@@ -1,23 +1,52 @@
+#
+# MIT License
+#
+# Copyright (c) 2018 Joel Winarske
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
 include(ExternalProject)
 
 find_program(ln REQUIRED)
 find_program(tar REQUIRED)
-find_program(wget REQUIRED)
+find_program(curl REQUIRED)
 
-set(SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
+if(NOT TARGET_SYSROOT)
+    set(TARGET_SYSROOT ${CMAKE_SOURCE_DIR}/sdk/sysroot)
+endif()
+
+if(NOT RASPBIAN_ROOTFS_VERSION)
+    set(RASPBIAN_ROOTFS_VERSION 2018-11-15-21:02)
+endif()
 
 set(ROOT_ARCHIVE root.tar.xz)
 set(ROOT_ARCHIVE_PATH ${CMAKE_BINARY_DIR}/sysroot-prefix/src/${ROOT_ARCHIVE})
 
 ExternalProject_Add(sysroot
-    DOWNLOAD_COMMAND wget -nv https://downloads.raspberrypi.org/raspbian/archive/2018-11-15-21:02/${ROOT_ARCHIVE}
+    DOWNLOAD_COMMAND curl http://director.downloads.raspberrypi.org/raspbian/archive/${RASPBIAN_ROOTFS_VERSION}/${ROOT_ARCHIVE} -s -o ${ROOT_ARCHIVE} 
     UPDATE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E remove_directory ${SYSROOT}
+    CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND 
-      ${CMAKE_COMMAND} -E make_directory ${SYSROOT} && 
-      cd ${SYSROOT} &&
+      ${CMAKE_COMMAND} -E make_directory ${TARGET_SYSROOT} && 
+      cd ${TARGET_SYSROOT} &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./opt/vc/ > /dev/null &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./lib/ > /dev/null &&
       tar -xvf ${ROOT_ARCHIVE_PATH} ./usr/ > /dev/null &&
