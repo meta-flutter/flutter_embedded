@@ -11,4 +11,7 @@ ExternalProject_Add(wayland_flutter
     BUILD_COMMAND autoninja -C out
     INSTALL_COMMAND ""
 )
+if(BUILD_TOOLCHAIN)
+    add_dependencies(wayland_flutter toolchain)
+endif()
 add_dependencies(wayland_flutter engine)

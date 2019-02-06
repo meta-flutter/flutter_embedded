@@ -56,12 +56,6 @@ option(BUILD_SYSROOT "Build sysroot" ON)
 option(BUILD_RPI_FLUTTER "Build Flutter for Raspberry Pi" ON)
 option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
 
-if(BUILD_SYSROOT)
-    if(BUILD_RPI_FLUTTER)
-        include(rpi.sysroot)
-    endif()
-endif()
-
 include(build_dependencies)
 
 if(ANDROID)

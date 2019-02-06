@@ -14,6 +14,7 @@ index 67e7bdc80..7d0e87244 100644
          "-stdlib=libc++",
 -        "-static-libstdc++",
 +        "-I@TOOLCHAIN_DIR@/include",
++        "-I@CMAKE_SOURCE_DIR@/third_party/libcxxabi/include",
 +        "-fno-exceptions",
 +        "-D_GNU_SOURCE", "-D__STDC_CONSTANT_MACROS", "-D__STDC_FORMAT_MACROS", "-D__STDC_LIMIT_MACROS"
 +      ]

@@ -43,14 +43,8 @@ if(BUILD_PI_USERLAND)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    if(BUILD_SYSROOT)    
-        add_dependencies(pi_userland sysroot)
-    endif()        
     if(BUILD_TOOLCHAIN)
-        add_dependencies(pi_userland binutils)
-    endif()
-    if(BUILD_COMPILER_RT)
-        add_dependencies(pi_userland compiler-rt)
+        add_dependencies(pi_userland toolchain)
     endif()
 
 endif()
@@ -73,14 +67,8 @@ if(BUILD_HELLO_PI)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    if(BUILD_SYSROOT)
-        add_dependencies(hello_pi sysroot)
-    endif()    
     if(BUILD_TOOLCHAIN)
-        add_dependencies(hello_pi binutils)
-    endif()
-    if(BUILD_COMPILER_RT)
-        add_dependencies(hello_pi compiler-rt)
+        add_dependencies(hello_pi toolchain)
     endif()
     if(BUILD_PI_USERLAND)
         add_dependencies(hello_pi pi_userland)
@@ -103,14 +91,8 @@ if(BUILD_TSLIB AND NOT ANDROID)
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
     if(BUILD_TOOLCHAIN)
-        add_dependencies(tslib clang)
+        add_dependencies(tslib toolchain)
     endif()
-    if(BUILD_COMPILER_RT)
-        add_dependencies(tslib compiler-rt)
-    endif()
-    if(BUILD_SYSROOT)
-        add_dependencies(tslib sysroot)
-    endif()        
 endif()
 
 #
@@ -133,7 +115,4 @@ ExternalProject_Add(rpi_flutter
         -DENGINE_INCLUDE_DIR=${ENGINE_INCLUDE_DIR}
         -DENGINE_LIBRARIES_DIR=${ENGINE_LIBRARIES_DIR}
 )
-if(BUILD_SYSROOT)
-    add_dependencies(rpi_flutter sysroot)
-endif()    
 add_dependencies(rpi_flutter engine)
