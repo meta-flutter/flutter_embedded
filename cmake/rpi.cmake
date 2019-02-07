@@ -22,10 +22,6 @@
 # SOFTWARE.
 #
 
-# create app toolchain file
-set(PKG_CONFIG_PATH ${TARGET_SYSROOT}/opt/vc/lib/pkgconfig)
-configure_file(${CMAKE_SOURCE_DIR}/cmake/app.clang.toolchain.cmake.in ${CMAKE_BINARY_DIR}/app.toolchain.cmake @ONLY)
-
 option(BUILD_PI_USERLAND "Build Pi userland repo - !!replaces sysroot/opt/vc!!" OFF)
 if(BUILD_PI_USERLAND)
 
@@ -37,7 +33,7 @@ if(BUILD_PI_USERLAND)
         PATCH_COMMAND rm -rf ${TARGET_SYSROOT}/opt/vc
         UPDATE_COMMAND ""
         CMAKE_ARGS
-            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/rpi.toolchain.cmake
             -DCMAKE_INSTALL_PREFIX=${TARGET_SYSROOT}
             -DVMCS_INSTALL_PREFIX=${TARGET_SYSROOT}/opt/vc
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -62,7 +58,7 @@ if(BUILD_HELLO_PI)
         BUILD_IN_SOURCE 0
         UPDATE_COMMAND ""
         CMAKE_ARGS
-            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/rpi.toolchain.cmake
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
@@ -85,7 +81,7 @@ if(BUILD_TSLIB AND NOT ANDROID)
         BUILD_IN_SOURCE 0
         UPDATE_COMMAND ""
         CMAKE_ARGS
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/rpi.toolchain.cmake
         -DCMAKE_INSTALL_PREFIX=${TARGET_SYSROOT}
         -DCMAKE_BUILD_TYPE=MinSizeRel
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
@@ -108,7 +104,7 @@ ExternalProject_Add(rpi_flutter
     BUILD_IN_SOURCE 0
     UPDATE_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/app.toolchain.cmake
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/rpi.toolchain.cmake
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/target
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
