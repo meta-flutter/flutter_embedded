@@ -1,6 +1,6 @@
 language: cpp
 os: linux
-dist: xenial
+#dist: xenial
 compiler: gcc #compiler used to build host compoments of toolchain
 
 env:
