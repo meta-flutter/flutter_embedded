@@ -51,6 +51,14 @@ if(NOT ANDROID)
     if(BUILD_SYSROOT AND BUILD_RPI_FLUTTER)
         set(BUILD_RPI_SYSROOT ON)
     endif()
+    
+    if(NOT LLVM_VERSION)
+        set(LLVM_VERSION tags/RELEASE_800/final/)
+    endif()
+
+    if(NOT LLVM_VER_DIR)
+        set(LLVM_VER_DIR 8.0.0)
+    endif()
 
     if(BUILD_TOOLCHAIN)
         ExternalProject_Add(toolchain
@@ -71,13 +79,13 @@ if(NOT ANDROID)
                 -DTARGET_SYSROOT=${TARGET_SYSROOT}
                 -DTARGET_TRIPLE=${TARGET_TRIPLE}
                 -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
-                -DLLVM_VERSION=tags/RELEASE_701/final/
-                -DLLVM_VER_DIR=7.0.1
+                -DLLVM_VERSION=${LLVM_VERSION}
+                -DLLVM_VER_DIR=${LLVM_VER_DIR}
             INSTALL_COMMAND ${CMAKE_COMMAND} -E copy 
-                    ${TOOLCHAIN_DIR}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 
+                    ${TOOLCHAIN_DIR}/lib/clang/${LLVM_VER_DIR}/${TARGET_TRIPLE}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0
                     ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
                 ${CMAKE_COMMAND} -E copy 
-                    ${TOOLCHAIN_DIR}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0 
+                    ${TOOLCHAIN_DIR}/lib/clang/${LLVM_VER_DIR}/${TARGET_TRIPLE}/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0
                     ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
                 chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&
                 chmod +x ${CMAKE_BINARY_DIR}/target/lib/libc++abi${CMAKE_SHARED_LIBRARY_SUFFIX}.1
