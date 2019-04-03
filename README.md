@@ -49,9 +49,14 @@ Planned Targets in no particular order (I can be persuaded with money to support
 
     https://github.com/flutter/flutter/wiki/Compiling-the-engine
 
-    Note: If you're running Ubuntu Bionic, you can use this shell file to setup your build dependencies:
+    Install build dependencies with this shell script:
 
         install-build-deps.sh
+
+4. Raspberry Pi prior to generating sysroot
+
+        sudo apt-get install libx11-dev
+        
 
 # Build Tip-Of-Tree Clang, Latest Binutils, and Flutter Engine master branch for Linux arm
 

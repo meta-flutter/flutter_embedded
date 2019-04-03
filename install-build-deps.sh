@@ -99,7 +99,7 @@ dev_list="bison cdbs curl dpkg-dev elfutils devscripts fakeroot
           libwww-perl libxslt1-dev libxss-dev libxt-dev libxtst-dev
           patch perl pkg-config python python-cherrypy3 python-crypto
           python-dev python-numpy python-opencv python-openssl python-psutil
-          python-yaml rpm ruby subversion wdiff zip"
+          python-yaml rpm ruby subversion wdiff zip libgtk-3-dev libx11-dev"
 
 # Full list of required run-time libraries
 lib_list="libatk1.0-dev libc6 libasound2 libcairo2 libcap2 libcups2 libexpat1

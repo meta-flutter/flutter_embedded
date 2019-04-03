@@ -99,7 +99,6 @@ if(NOT ENGINE_REPO)
 endif()
 
 set(ENGINE_SRC_PATH ${CMAKE_BINARY_DIR}/engine-prefix/src/engine)
-configure_file(cmake/engine.gclient.in ${ENGINE_SRC_PATH}/.gclient @ONLY)
 include(engine_options)
 
 set(ENGINE_INCLUDE_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
@@ -108,10 +107,18 @@ set(ENGINE_LIBRARIES_DIR ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR})
 # update patch file with toolchain dirs
 configure_file(cmake/patches/engine_compiler_build.patch.in ${CMAKE_BINARY_DIR}/engine_compiler_build.patch @ONLY)
 
+if(NOT ANDROID)
+    set(DISABLE_ANDROID_HOOKS --custom-var=download_android_deps=false)
+endif()
+
 find_program(gclient REQUIRED)
 ExternalProject_Add(engine
-    DOWNLOAD_COMMAND cd ${ENGINE_SRC_PATH} && gclient sync
+    DOWNLOAD_COMMAND
+        cd ${ENGINE_SRC_PATH} &&
+        gclient config --name=src/flutter --unmanaged ${DISABLE_ANDROID_HOOKS} https://github.com/flutter/engine.git &&
+        gclient sync -j8
     PATCH_COMMAND
+        cd ${ENGINE_SRC_PATH} && 
         cd src && git checkout build/config/compiler/BUILD.gn && git apply ${CMAKE_BINARY_DIR}/engine_compiler_build.patch &&
         cd third_party/dart && git checkout runtime/BUILD.gn && git apply ${CMAKE_SOURCE_DIR}/cmake/patches/dart.patch &&
         cd ../../..
