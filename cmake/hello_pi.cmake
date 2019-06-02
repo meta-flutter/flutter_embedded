@@ -65,7 +65,7 @@ add_dependencies(hello_audio ilclient)
 target_link_libraries(hello_audio openmaxil bcm_host vcos pthread)
 
 add_executable(hello_dispmanx hello_dispmanx/dispmanx.c)
-target_link_libraries(hello_dispmanx bcm_host)
+target_link_libraries(hello_dispmanx bcm_host pthread vcos)
 
 add_executable(hello_encode hello_encode/encode.c)
 target_link_libraries(hello_encode ilclient openmaxil bcm_host vcos vchiq_arm pthread)
@@ -76,10 +76,10 @@ set(hello_fft_src
     hello_fft/gpu_fft_twiddles.c hello_fft/gpu_fft_shaders.c)
 
 add_executable(hello_fft ${hello_fft_src} hello_fft/hello_fft.c)
-target_link_libraries(hello_fft m dl)
+target_link_libraries(hello_fft m dl pthread)
 
 add_executable(hello_fft_2d ${hello_fft_src} hello_fft/hello_fft_2d.c hello_fft/gpu_fft_trans.c)
-target_link_libraries(hello_fft_2d m dl)
+target_link_libraries(hello_fft_2d m dl pthread)
 
 add_executable(hello_font hello_font/main.c)
 target_link_libraries(hello_font vgfont freetype z brcmGLESv2 brcmEGL openmaxil
@@ -103,10 +103,10 @@ target_link_libraries(hello_tiger brcmGLESv2 brcmEGL openmaxil bcm_host vcos vch
 target_compile_definitions(hello_tiger PRIVATE -D__RASPBERRYPI__)
 
 add_executable(hello_triangle hello_triangle/triangle.c)
-target_link_libraries(hello_triangle m brcmGLESv2 brcmEGL bcm_host)
+target_link_libraries(hello_triangle m brcmGLESv2 brcmEGL bcm_host pthread vcos)
 
 add_executable(hello_triangle2 hello_triangle2/triangle2.c)
-target_link_libraries(hello_triangle2 brcmGLESv2 brcmEGL bcm_host)
+target_link_libraries(hello_triangle2 brcmGLESv2 brcmEGL bcm_host pthread vcos)
 
 add_executable(hello_video hello_video/video.c)
 target_link_libraries(hello_video ilclient openmaxil bcm_host vcos pthread)
