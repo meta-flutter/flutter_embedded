@@ -1,23 +1,24 @@
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 67e7bdc80..7d0e87244 100644
+index e6fb53d4c..037c3759c 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -568,10 +568,25 @@ config("runtime_library") {
-   # Tracked in https://fuchsia.atlassian.net/browse/TO-61
+@@ -608,11 +608,26 @@ config("runtime_library") {
+   # gen_snapshot) where this is not supported.
    if (is_linux) {
      if (current_cpu != "x86") {
--      cflags_cc += [ "-stdlib=libc++" ]
--      ldflags += [
+-      cflags_cc += [ "-nostdinc++" ]
+-      include_dirs = [
+-        "//third_party/libcxx/include",
+-        "//third_party/libcxxabi/include",
 +      cflags_cc += [
 +        #"-ggdb",
 +        #"-ggdb3",
-         "-stdlib=libc++",
--        "-static-libstdc++",
++         "-stdlib=libc++",
 +        "-I@CMAKE_SOURCE_DIR@/third_party/libcxx/include",
 +        "-I@CMAKE_SOURCE_DIR@/third_party/libcxxabi/include",
 +        "-fno-exceptions",
 +        "-D_GNU_SOURCE", "-D__STDC_CONSTANT_MACROS", "-D__STDC_FORMAT_MACROS", "-D__STDC_LIMIT_MACROS"
-+      ]
+       ]
 +
 +       ldflags += [
 +        "-L@TOOLCHAIN_DIR@/lib",
@@ -28,6 +29,8 @@ index 67e7bdc80..7d0e87244 100644
 +
 +      libs += [
 +        "c++abi",
-       ]
++       ]
      } else {
        cflags_cc += [ "-stdlib=libstdc++" ]
+       ldflags += [ "-stdlib=libstdc++" ]
+
