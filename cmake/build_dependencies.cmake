@@ -47,17 +47,12 @@ if(NOT ANDROID)
         set(TARGET_TRIPLE ${TARGET_ARCH}-linux-gnueabihf)
     endif()
 
-    set(BUILD_RPI_SYSROOT OFF)
-    if(BUILD_SYSROOT AND BUILD_RPI_FLUTTER)
-        set(BUILD_RPI_SYSROOT ON)
-    endif()
-    
     if(NOT LLVM_VERSION)
-        set(LLVM_VERSION tags/RELEASE_800/final/)
+        set(LLVM_VERSION tags/RELEASE_900/final/)
     endif()
 
     if(NOT LLVM_VER_DIR)
-        set(LLVM_VER_DIR 8.0.0)
+        set(LLVM_VER_DIR 9.0.0)
     endif()
 
     if(BUILD_TOOLCHAIN)
@@ -71,7 +66,7 @@ if(NOT ANDROID)
                 -DCMAKE_INSTALL_PREFIX=${TOOLCHAIN_DIR}
                 -DCMAKE_BUILD_TYPE=MinSizeRel
                 -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-                -DBUILD_PLATFORM_SYSROOT=${BUILD_SYSROOT}
+                -DBUILD_PLATFORM_SYSROOT=${BUILD_PLATFORM_SYSROOT}
                 -DBUILD_PLATFORM_RPI=${BUILD_RPI_FLUTTER}
                 -DTHIRD_PARTY_DIR=${CMAKE_SOURCE_DIR}/third_party
                 -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
@@ -81,6 +76,8 @@ if(NOT ANDROID)
                 -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
                 -DLLVM_VERSION=${LLVM_VERSION}
                 -DLLVM_VER_DIR=${LLVM_VER_DIR}
+                -DBUILD_PLATFORM_RPI_HELLO=OFF
+                -DBUILD_MRAA=ON
             INSTALL_COMMAND ${CMAKE_COMMAND} -E copy 
                     ${TOOLCHAIN_DIR}/lib/clang/${LLVM_VER_DIR}/${TARGET_TRIPLE}/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1.0
                     ${CMAKE_BINARY_DIR}/target/lib/libc++${CMAKE_SHARED_LIBRARY_SUFFIX}.1 &&

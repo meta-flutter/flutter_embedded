@@ -51,7 +51,7 @@ project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 
-option(BUILD_SYSROOT "Build sysroot" ON)
+option(BUILD_PLATFORM_SYSROOT "Build Platform sysroot" ON)
 
 option(BUILD_RPI_FLUTTER "Build Flutter for Raspberry Pi" ON)
 option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
