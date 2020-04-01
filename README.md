@@ -14,7 +14,7 @@ In regards to latency, one test case will be CAN bus signal from an Automotive O
 
 # Project Status
 
-### This repo is not currently being maintained.  I strongly suggest using Yocto to generate [flutter_wayland](https://github.com/jwinarske/meta-flutter) for your embedded Linux target.  Unless of course you want to sponsor me :)
+### I'm planning to refactor this repo to eliminate the Clang toolchain build, as Clang 8.0 is pulled in via the Engine build.  The only external deps in case of Linux building the Embedder Engine is fontconfig, and crtstartS/crtendS.  The actual runtime doesn't need Clang, and can be built with GCC.  For building the Engine with Yocto I have a solution that doesn't involve CMake; easier/cleaner/faster - [flutter_wayland](https://github.com/jwinarske/meta-flutter)
 
 
 ## * Raspberry PI bits *
