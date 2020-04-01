@@ -14,9 +14,10 @@ In regards to latency, one test case will be CAN bus signal from an Automotive O
 
 # Project Status
 
-[![Build Status](https://travis-ci.com/jwinarske/flutter_embedded.svg?branch=master)](https://travis-ci.com/jwinarske/flutter_embedded)
+### This repo is not currently being maintained.  I strongly suggest using Yocto to generate [flutter_wayland](https://github.com/jwinarske/meta-flutter) for your embedded Linux target.  Unless of course you want to sponsor me :)
 
-## * Raspberry PI bits, build out of the box on Ubunutu 18.04.1 LTS *
+
+## * Raspberry PI bits *
 
 The default build configuration (provided a properly configured sysroot), will generate bits that execute on a Raspberry Pi.
 
@@ -27,13 +28,6 @@ Planned Work Items
     3. Support all 4 machine architectures to build on Linux.  Currently only ARM has been tested.
     4. Depending on demand and use cases, add support for building on Mac and Windows (although it may already work)...
 
-Planned Targets in no particular order (I can be persuaded with money to support specific targets)
-
-    Raspberry Pi - Standalone
-    DragonBoard 410c - Standalone/Yocto meta layer
-    Ultra96 - Standalone/Yocto meta layer
-    SabreLite - Standalone/Yocto meta layer
-    Intel Target - TBD
 
 # Pre-requisites
 
