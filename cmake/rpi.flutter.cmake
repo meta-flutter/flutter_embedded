@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 Joel Winarske
+# Copyright (c) 2018-2020 Joel Winarske
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,21 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.11)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-    message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to MinSizeRel.")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
+    message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to Release.")
 endif()
 
 project(flutter LANGUAGES CXX)
 
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include_directories(
     ${CMAKE_SYSROOT}/opt/vc/include
@@ -48,7 +52,6 @@ add_definitions(
     -DSTANDALONE -D_LINUX -DTARGET_POSIX -D_REENTRANT 
     -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST 
-    -fPIC -DPIC 
     -DUSE_VCHIQ_ARM -DHAVE_LIBOPENMAX=2
     -DUSE_EXTERNAL_OMX -DOMX -DOMX_SKIP64BIT)
 
@@ -58,8 +61,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE -Wall -g -ftree-vector
 set(cxx_sources
     flutter/flutter_application.cc
     flutter/main.cc
-    flutter/pi_display.cc
     flutter/utils.cc
+    flutter/pi_display.cc
 )
 
 add_executable(flutter ${cxx_sources})

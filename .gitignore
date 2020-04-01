@@ -1,4 +1,4 @@
 .vscode
 build
-sdk
 third_party
+sysroot

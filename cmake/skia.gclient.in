@@ -1,8 +1,0 @@
-solutions = [
-  {
-    "url": "@SKIA_REPO@",
-    "managed": False,
-    "name": "skia",
-    "deps_file": "DEPS",
-  },
-]

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 Joel Winarske
+# Copyright (c) 2018-2020 Joel Winarske
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,16 @@
 # SOFTWARE.
 #
 
-message(STATUS "llvm-config ............ ${LLVM_CONFIG_PATH}")
+include (ExternalProject)
 
-set(CONFIG_COMMAND ${LLVM_CONFIG_PATH}
-    "--version"
-    "--cflags"
-    "--cxxflags"
-    "--ldflags"
-    )
-
-execute_process(
-    COMMAND ${CONFIG_COMMAND}
-    RESULT_VARIABLE HAD_ERROR
-    OUTPUT_VARIABLE CONFIG_OUTPUT
+ExternalProject_Add(depot_tools
+    GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    GIT_TAG master
+    GIT_SHALLOW 1
+    SOURCE_DIR ${DEPOT_TOOLS_DIR}
+    UPDATE_COMMAND ""
+    BUILD_IN_SOURCE 0
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
 )
-
-if(NOT HAD_ERROR)
-    string(REGEX REPLACE "[ \t]*[\r\n]+[ \t]*" ";" CONFIG_OUTPUT ${CONFIG_OUTPUT})
-else()
-    string(REPLACE ";" " " CONFIG_COMMAND_STR "${CONFIG_COMMAND}")
-    message(STATUS "${CONFIG_COMMAND_STR}")
-    message(FATAL_ERROR "llvm-config failed with status ${HAD_ERROR}")
-endif()
-
-list(GET CONFIG_OUTPUT 0 __VERSION)
-list(GET CONFIG_OUTPUT 1 __CFLAGS)
-list(GET CONFIG_OUTPUT 2 __CXXFLAGS)
-list(GET CONFIG_OUTPUT 3 __LDFLAGS)
-
-string(REGEX REPLACE "svn" "" __VERSION ${__VERSION})
-set(LLVM_VERSION ${__VERSION} CACHE PATH "llvm version")
-set(LLVM_CFLAGS ${__CFLAGS} CACHE PATH "llvm c flags")
-set(LLVM_CXXFLAGS ${__CXXFLAGS} CACHE PATH "llvm cxx flags")
-set(LLVM_LDFLAGS ${__LDFLAGS} CACHE PATH "llvm linker flags")

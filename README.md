@@ -1,80 +1,137 @@
 # flutter_embedded
 
-This repo is currently about build automation for Tip of the Tree Clang, Binutils, and Flutter Engine artifacts.  The useage target is for an embedded system.
-
-# Motivation
-See if Embedded Flutter is a compeling alternative to Chromium ContentShell+JS+CSS, and QT.
-
-Areas of interest are memory footprint, stack latency, and where does it fit in the UI Framework landscape.
-
-I can build a ContentShell browser that with the smallest of pages, only has a 15MB system heap footprint.  As the HTML5 application complexity increases, the memory usage ballons.  We're looking for controlled predictability.
-
-In regards to latency, one test case will be CAN bus signal from an Automotive ODBC-II connector, rendering a gauge.
-
+This repo is focused on building alternative Flutter Shells for Embedded Linux.
 
 # Project Status
 
-### This repo is not currently being maintained.  I strongly suggest using Yocto to generate [flutter_wayland](https://github.com/jwinarske/meta-flutter) for your embedded Linux target.  Unless of course you want to sponsor me :)
+**[Note: armv6 is not supported by Google](https://github.com/flutter/flutter/issues/22380#issuecomment-629291519)**
+
+To generate DEB packages issue `make package` from your build folder.  If you built with default flags you will see these in your build directory:
+
+    libflutter_engine-debug-dev-1.0.0-Linux-armhf.deb
+    flutter-glfw-1.0.0-Linux-armhf.deb
+
+You can now select the desired channel, the default is stable.  Use this `cmake .. -DCHANNEL=beta` to swtich channels.
+Master, dev, beta, and stable have all been tested building armv7 image for Raspberry Pi..
+
+flutter-pi has been added as an optional shell to build.
+
+No external toolchain is required.  I'm using the repo CIPD sync artifact - Clang Toolchain.
+
+The default build configuration (provided a properly configured sysroot), will cross-compile armv7a flutter engine, and selected shells.
+
+If your are using a sysroot different than that included as default, you will need to override a few variables.  See examples below.
+
+Yocto Layer to build Engine, Wayland shell, and Gallery App can be found here:  [meta-flutter](https://github.com/jwinarske/meta-flutter)
 
 
-## * Raspberry PI bits *
+## Pre-requisites to build Flutter Engine and flutter_glfw
 
-The default build configuration (provided a properly configured sysroot), will generate bits that execute on a Raspberry Pi.
+1. CMake 3.15 or greater
 
-Planned Work Items
-    
-    1. Memory Profiling and optimization.  With Debug engine running a simple app on the PI, it's allocating around 150MB, with 12 threads.
-    2. Platform Channel handler.  This will allow Dart to call C/C++ code.  Think CAN bus, I2C, SPI, RS-232, RS-485, MIDI, Audio, Espresso Machine I/O, etc.
-    3. Support all 4 machine architectures to build on Linux.  Currently only ARM has been tested.
-    4. Depending on demand and use cases, add support for building on Mac and Windows (although it may already work)...
+2. Sysroot compatible with the Clang runtime flavors
 
 
-# Pre-requisites
+  *Notes:*
+  *LLVM runtime libraries do not support soft floating point. Google does not support armv6 in Dart.  It's fairly straight forward to patch and build for armv6, but you will hit problems in Dart.*
 
-1. CMake 3.11 or greater
 
-2. Setup depot_tools and add to path.  This provides gclient, ninja, autoninja, etc.
-
-    http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
-
-3. Confirm you can build the engine repo standalone
-
-    https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
-
-    https://github.com/flutter/flutter/wiki/Compiling-the-engine
-
-    Install build dependencies with this shell script:
-
-        install-build-deps.sh
-
-4. Raspberry Pi prior to generating sysroot
-
-        sudo apt-get install libx11-dev
-        
-
-# Build Tip-Of-Tree Clang, Latest Binutils, and Flutter Engine master branch for Linux arm
+## Build engine and flutter_glfw (stable channel) example shell for RPI
 
     git clone https://github.com/jwinarske/flutter_embedded
     cd flutter_embedded
     mkdir build && cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
-    autoninja
+    cmake ..
+    make -j8
+    make package
 
-Note: Your build folder can be wherever you want...
+To enable build spew:
+
+    make -j8 VERBOSE=1
+
+*Note: Your build folder can be wherever you want*
+
+## Build engine (stable channel) and flutter-pi for RPI (mounted SD card)
+
+    git clone https://github.com/jwinarske/flutter_embedded
+    cd flutter_embedded
+    mkdir build && cd build
+    cmake .. -DBUILD_PLATFORM_SYSROOT=OFF -DTARGET_SYSROOT=/media/joel/rootfs -DBUILD_FLUTTER_PI=ON -DBUILD_GLFW_FLUTTER=OFF
+    make -j8
+    make package
+
+*Note*: this requires the following pacakges installed on your target: 
+
+    sudo apt install libgl1-mesa-dev libgles2-mesa-dev ibegl-mesa0 libdrm-dev libgbm-dev gpiod libgpiod-dev
+
+## Switching channels
+To switch channels add variable CHANNEL to cmake invocation.  Like this
+
+    cmake .. -DCHANNEL=beta
+    make -j8
+    make package
+
+To build all channels of Engine/GLFW shell for Raspberry Pi armv7 in your nightly CI build job, you could do this
+
+    git clone https://github.com/jwinarske/flutter_embedded
+    cd flutter_embedded
+    mkdir build && cd build
+    cmake ..
+    make -j8
+    make package
+    cmake .. -DCHANNEL=beta
+    make -j8
+    make package
+    cmake .. -DCHANNEL=dev
+    make -j8
+    make package
+    cmake .. -DCHANNEL=master
+    make -j8
+    make package
+    cmake .. -DCHANNEL=stable -DENGINE_RUNTIME_MODE=release
+    make -j8
+    make package
+    cmake .. -DCHANNEL=beta
+    make -j8
+    make package
+    cmake .. -DCHANNEL=dev
+    make -j8
+    make package
+    cmake .. -DCHANNEL=master
+    make -j8
+    make package
+
+## Build gtk3+ dependent engine (stable channel) for HOST
+
+    git clone https://github.com/jwinarske/flutter_embedded
+    cd flutter_embedded
+    mkdir build && cd build
+    cmake .. -DENGINE_DISABLE_DESKTOP=OFF -DENGINE_EMBEDDER_FOR_TARGET=OFF -DBUILD_FLUTTER_RPI=OFF -DBUILD_PLATFORM_SYSROOT=OFF -DTARGET_SYSROOT=/usr -DTARGET_ARCH=x64 -DBUILD_PLATFORM_SYSROOT_RPI=OFF
+    make -j8
+    make package
+
+To switch to building flutter_glfw (TARGET) be sure to undefine the variables set prior.
+
+    cmake .. -UENGINE_DISABLE_DESKTOP -UENGINE_EMBEDDER_FOR_TARGET -DBUILD_FLUTTER_RPI=ON -DBUILD_PLATFORM_SYSROOT=ON -UTARGET_SYSROOT -UTARGET_ARCH -DBUILD_PLATFORM_SYSROOT_RPI=ON
+    make -j8
+    make package
+
+## Build gtk3+ dependent engine (stable channel) for TARGET
+
+    git clone https://github.com/jwinarske/flutter_embedded
+    cd flutter_embedded
+    mkdir build && cd build
+    cmake .. -DENGINE_DISABLE_DESKTOP=OFF -DENGINE_EMBEDDER_FOR_TARGET=OFF
+    make -j8
+    make package
 
 # Override Variables
 To use the override variables, pass them in with the cmake command.  One example
 
-    cmake -DTOOLCHAIN_DIR=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 -DTARGET_SYSROOT=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DTARGET_TRIPLE=arm-linux-androideabi-clang -DENGINE_REPO=https://github.com/jwinarske/engine -GNinja -DCMAKE_BUILD_TYPE=Debug
-
-### TOOLCHAIN_DIR
-This is the directory of the installed toolchain.  The default value used is "${CMAKE_SOURCE_DIR}/sdk/toolchain".  When the toolchain is built, it's installed to this directory.  If TOOLCHAIN_DIR is not set, it will build the toolchain.
+    cmake -DTOOLCHAIN_DIR=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 -DTARGET_SYSROOT=~/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot  -DENGINE_REPO=https://github.com/jwinarske/engine -DCMAKE_BUILD_TYPE=Release
 
 ### TARGET_SYSROOT
 This is the location of the target sysroot.  The default value is "${CMAKE_SOURCE_DIR}/sdk/sysroot".  One approach would be to download target image such as a Raspberry Pi image, and mount it.  Setting TARGET_SYSROOT to the rootfs directory.
-
-### TARGET_TRIPLE
-This is the triple of your toolchain.  The default value used is "arm-linux-gnueabihf"
 
 ### TARGET_ARCH
 This is the target architecture of your build.  It must  match your toolchain, and that which the flutter engine build supports.
@@ -82,30 +139,11 @@ This is the target architecture of your build.  It must  match your toolchain, a
 ### ENGINE_REPO
 This is the repo of the flutter engine.  The default value is https://github.com/flutter/engine.git.  If you want to use your own fork, set this variable to point to your fork's url.
 
-### LLVM_TARGETS_TO_BUILD
-List of Targets LLVM should be built with.  Relavant to Flutter the options are:
-"AArch64;ARM;X86".  Host architecture (x86_64) is implicit, as that is the expected build host.  If crosscompiling compiler-rt, libcxxabi, and libcxx the current scheme expects only a single value for LLVM_TARGETS_TO_BUILD.
-
-### BUILD_COMPILER_RT
-Checks out and builds compiler-rt for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LIBCXXABI
-Checks out and builds libcxxabi for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LIBCXX
-Checks out and builds libcxx.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LLD
-Checks out and builds lld.  Default value is OFF, and valid only when TOOLCHAIN_DIR is not set.  This option enables the use of "-fuse-ld=lld".
-
 ### ENGINE_UNOPTIMIZED
 Unoptimized flag, defaults to OFF
 
 ### ENGINE_RUNTIME_MODE
-If ENGINE_RUNTIME_MODE is not set to debug, profile, or release, it will default to debug.
-
-### ENGINE_DYNAMIC
-Enable Dynamic, defaults to off.
+If ENGINE_RUNTIME_MODE is not set to `debug`, `profile`, or `release`, it defaults to `debug`.
 
 ### ENGINE_SIMULATOR
 Enable simulator, defaults to OFF
@@ -147,10 +185,10 @@ To generate target binaries for a Raspberry Pi, you need a valid sysroot, prior 
 
 ### sysroot - Default
 
-    I dynamically create the target sysroot from this rootfs archive:
-        https://downloads.raspberrypi.org/raspbian/archive/2018-11-15-21:02/root.tar.xz
+    The target sysroot is created from this rootfs archive:
+        https://downloads.raspberrypi.org/raspbian/archive/2020-02-14-13:48/root.tar.xz
 
-    The resultant build artifacts are compatible with any 2018-11-15 Raspbian image.  If you need a different rootfs version, you will need to update the wget command in flutter_embedded/cmake/rpi.sysroot.cmake.
+    The resultant build artifacts are compatible with any 2020-02-14 Raspbian image.  If you need a different rootfs version, you will need to update the wget command in flutter_embedded/cmake/rpi.sysroot.cmake.
 
 ### sysroot - Override / create from Raspbian img file
 
@@ -229,8 +267,7 @@ When adding in Linux support to the Dart code, start by adding "case TargetPlatf
     cd {flutter app project folder}
     flutter build bundle
 
-*Note: You either need to override debugDefaultTargetPlatformOverride, or 
-"Enable Linux as a Platform in your Flutter Repo"*
+*Note: You either need to override TargetPlatform prior to running the app*
 
 ## Tested Flutter Examples
 
@@ -241,12 +278,10 @@ Tested apps post Flutter Dart "linux" platfrom add
     flutter/examples/flutter_view
     flutter/examples/hello_world
     flutter/examples/layers * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
-    flutter/examples/platform_channel *requires MessageCallback impl for 100%
+    flutter/examples/platform_channel
     flutter/examples/platform_view * Android view not impl.. no-op btn
     flutter/examples/stocks
     flutter-desktop-embedding/example/flutter_app
-
-Depending on the app, be preapred for Dart runtime exceptions.  Refer to https://github.com/flutter/flutter/issues
 
 ### Push built Flutter Application to Target
 
@@ -358,32 +393,6 @@ Run the debugger, once breakpoint hits, change to the Debugger Console window, a
 
 Step into FlutterEngineRun()
 
-# Wayland
-
-Building is currently supported using a Yocto project SDK
-
-### Yocto SDK build
-
-1. Follow steps in repo README to generate target image.  This repo is used for the DragonBoard 410c
-
-    https://github.com/96boards/oe-rpb-manifest
-
-2. Build SDK
-        
-        bitbake <image> -c populate_sdk
-
-3. Install SDK.  Default install path is /usr/local/rpb-wayland-x86_64
-
-    *Note: the required .o files are installed in the wrong place.  You have to copy or move them to the gcc folder.*
-
-    Bug Filed: https://github.com/96boards/oe-rpb-manifest/issues/106
-
-4. Build Flutter stack using SDK for DragonBoard 410c
-
-        cd {flutter_embedded git clone root}
-        mkdir build64 && cd build64
-        cmake .. -DCMAKE_BUILD_TYPE=MinSizeRel -DTARGET_ARCH=arm64 -DTARGET_SYSROOT=/usr/local/rpb-wayland-x86_64/sysroots/aarch64-linaro-linux -DTOOLCHAIN_DIR=/usr/local/rpb-wayland-x86_64/sysroots/x86_64-oesdk-linux/usr -DTARGET_TRIPLE=aarch64-linaro-linux -DBUILD_RPI_FLUTTER=OFF -DBUILD_WAYLAND_FLUTTER=ON -DENGINE_RUNTIME_MODE=release
-
 
 # Reference Links
 http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
@@ -391,18 +400,6 @@ http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/
 https://github.com/flutter/flutter/wiki/Compiling-the-engine
 
 https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
-
-https://clang.llvm.org/get_started.html
-
-https://libcxx.llvm.org/docs/BuildingLibcxx.html
-
-https://medium.com/@zw3rk/making-a-raspbian-cross-compilation-sdk-830fe56d75ba
-
-https://medium.com/@au42/the-useful-raspberrypi-cross-compile-guide-ea56054de187
-
-https://www.raspberrypi.org/downloads/raspbian/
-
-https://medium.com/flutter-io/flutter-on-raspberry-pi-mostly-from-scratch-2824c5e7dcb1
 
 https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#libc
 

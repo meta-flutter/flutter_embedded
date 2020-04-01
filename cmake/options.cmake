@@ -22,38 +22,33 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.15)
+option(BUILD_PLATFORM_SYSROOT "Build Platform sysroot" ON)
+option(BUILD_PLATFORM_SYSROOT_RPI "Build Raspberry Pi Sysroot" ON)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-    message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to Release.")
+option(BUILD_FLUTTER_RPI "Build RPI Flutter Shell" ON)
+option(BUILD_GLFW_FLUTTER "Build GLFW example" ON)
+option(BUILD_FLUTTER_PI "Build flutter-pi" OFF)
+option(BUILD_FLUTTER_WAYLAND "Build Wayland Flutter Shell" OFF)
+
+if(NOT TARGET_ARCH)
+    set(TARGET_ARCH "arm" CACHE STRING "Choose the target arch, options are: x64, x86, arm64, or arm." FORCE)
+    message(STATUS "TARGET_ARCH not set, defaulting to arm")
 endif()
 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
-
-if(NOT BUILD_NUMBER)
-    set(BUILD_NUMBER 0)
+if(NOT TARGET_SYSROOT)
+    set(TARGET_SYSROOT "${CMAKE_SOURCE_DIR}/sysroot")
+    message(STATUS "TARGET_SYSROOT not set, defaulting to ${CMAKE_SOURCE_DIR}/sysroot")
 endif()
-set(FLUTTER_EMBEDDED_VERSION 1.0.${BUILD_NUMBER})
 
-set(PACKAGE_NAME flutter-embedded)
-project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
+if(NOT THIRD_PARTY_DIR)
+    SET(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
+endif()
 
-message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
-message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
+if(NOT TOOLCHAIN_DIR)
+    # TODO - only tested with linux
+    set(TOOLCHAIN_DIR "${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang")
+endif()
 
-include(ProcessorCount)
-ProcessorCount(NUM_PROC)
-
-
-include(options)
-include(sysroot)
-include(depot_tools)
-include(engine)
-
-
-if(BUILD_FLUTTER_RPI)
-    include(rpi)
-elseif(BUILD_FLUTTER_WAYLAND)
-    include(wayland)
+if(NOT DEPOT_TOOLS_DIR)
+    SET(DEPOT_TOOLS_DIR "${THIRD_PARTY_DIR}/depot_tools")
 endif()
