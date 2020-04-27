@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 Joel Winarske
+# Copyright (c) 2018-2020 Joel Winarske
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@
 # SOFTWARE.
 #
 
-option(BUILD_PI_USERLAND "Build Pi userland repo - !!replaces sysroot/opt/vc!!" OFF)
 if(BUILD_PI_USERLAND)
 
     ExternalProject_Add(pi_userland
@@ -39,13 +38,10 @@ if(BUILD_PI_USERLAND)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    if(BUILD_TOOLCHAIN)
-        add_dependencies(pi_userland toolchain)
-    endif()
+    add_dependencies(pi_userland engine)
 
 endif()
 
-option(BUILD_HELLO_PI "Build the apps in {sysroot}/opt/vc/src/hello_pi" ON)
 if(BUILD_HELLO_PI)
 
     # These are C apps...
@@ -63,16 +59,13 @@ if(BUILD_HELLO_PI)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    if(BUILD_TOOLCHAIN)
-        add_dependencies(hello_pi toolchain)
-    endif()
+    add_dependencies(hello_pi engine)
     if(BUILD_PI_USERLAND)
         add_dependencies(hello_pi pi_userland)
     endif()
 
 endif()
 
-option(BUILD_TSLIB "Checkout and build tslib for target" ON)
 if(BUILD_TSLIB AND NOT ANDROID)
     ExternalProject_Add(tslib
         GIT_REPOSITORY https://github.com/kergoth/tslib.git
@@ -86,20 +79,17 @@ if(BUILD_TSLIB AND NOT ANDROID)
         -DCMAKE_BUILD_TYPE=MinSizeRel
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
     )
-    if(BUILD_TOOLCHAIN)
-        add_dependencies(tslib toolchain)
-    endif()
+    add_dependencies(tslib engine)
 endif()
 
 #
 # build flutter executable
 #
 
-set(FLUTTER_TARGET_NAME "Raspberry Pi")
 ExternalProject_Add(rpi_flutter
     GIT_REPOSITORY https://github.com/jwinarske/flutter_from_scratch.git
     GIT_TAG clang_fixes
-    GIT_SHALLOW true
+    GIT_SHALLOW 1
     PATCH_COMMAND ""
     BUILD_IN_SOURCE 0
     UPDATE_COMMAND ""

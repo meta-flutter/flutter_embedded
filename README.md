@@ -1,64 +1,54 @@
 # flutter_embedded
 
-This repo is currently about build automation for Tip of the Tree Clang, Binutils, and Flutter Engine artifacts.  The useage target is for an embedded system.
-
-# Motivation
-See if Embedded Flutter is a compeling alternative to Chromium ContentShell+JS+CSS, and QT.
-
-Areas of interest are memory footprint, stack latency, and where does it fit in the UI Framework landscape.
-
-I can build a ContentShell browser that with the smallest of pages, only has a 15MB system heap footprint.  As the HTML5 application complexity increases, the memory usage ballons.  We're looking for controlled predictability.
-
-In regards to latency, one test case will be CAN bus signal from an Automotive ODBC-II connector, rendering a gauge.
-
+This repo is currently about build automation for Tip of the Tree Flutter Engine, and alternative Linux shells.
 
 # Project Status
 
-### I'm planning to refactor this repo to eliminate the Clang toolchain build, as Clang 8.0 is pulled in via the Engine build.  The only external deps in case of Linux building the Embedder Engine is fontconfig, and crtstartS/crtendS.  The actual runtime doesn't need Clang, and can be built with GCC.  For building the Engine with Yocto I have a solution that doesn't involve CMake; easier/cleaner/faster - [flutter_wayland](https://github.com/jwinarske/meta-flutter)
+**Note: armv6 is not supported by Google**
+
+I have refactored things to take advantage of the Fuchsia Clang Toolchain (CIPD).
+
+This is building very close to tip of tree.  It may be too new for your SDK.  To regress engine build will most likely involve some hair pulling.
+
+I need people to test their desired configuration and provide feedback.
+
+I aam considering a new branch for each Engine milestones.
+
+When building with fontconfig enabled, you need to have PKG_CONFIG_PATH set to find `freetype2.pc`.
+
+
+My current focus has been evolving Wayland Client as part of Yocto based images:
+
+[meta-flutter](https://github.com/jwinarske/meta-flutter)
+
+[flutter_wayland](https://github.com/jwinarske/flutter_wayland)
+
+
+
 
 
 ## * Raspberry PI bits *
 
 The default build configuration (provided a properly configured sysroot), will generate bits that execute on a Raspberry Pi.
 
-Planned Work Items
-    
-    1. Memory Profiling and optimization.  With Debug engine running a simple app on the PI, it's allocating around 150MB, with 12 threads.
-    2. Platform Channel handler.  This will allow Dart to call C/C++ code.  Think CAN bus, I2C, SPI, RS-232, RS-485, MIDI, Audio, Espresso Machine I/O, etc.
-    3. Support all 4 machine architectures to build on Linux.  Currently only ARM has been tested.
-    4. Depending on demand and use cases, add support for building on Mac and Windows (although it may already work)...
-
-
 # Pre-requisites
 
 1. CMake 3.11 or greater
 
-2. Setup depot_tools and add to path.  This provides gclient, ninja, autoninja, etc.
+2. (Engine) fontconfig if enabled and building on Linux
 
-    http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
+3. Sysroot compatible with the Clang runtime flavors
 
-3. Confirm you can build the engine repo standalone
+4. (Wayland flutter) handful of dependencies.  Read the CMakeLists.txt for fluttr_wayland.
 
-    https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
 
-    https://github.com/flutter/flutter/wiki/Compiling-the-engine
-
-    Install build dependencies with this shell script:
-
-        install-build-deps.sh
-
-4. Raspberry Pi prior to generating sysroot
-
-        sudo apt-get install libx11-dev
-        
-
-# Build Tip-Of-Tree Clang, Latest Binutils, and Flutter Engine master branch for Linux arm
+# Build Tip-Of-Tree Flutter Engine master branch for Linux arm
 
     git clone https://github.com/jwinarske/flutter_embedded
     cd flutter_embedded
     mkdir build && cd build
     cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
-    autoninja
+    autoninja engine
 
 Note: Your build folder can be wherever you want...
 
@@ -81,22 +71,6 @@ This is the target architecture of your build.  It must  match your toolchain, a
 
 ### ENGINE_REPO
 This is the repo of the flutter engine.  The default value is https://github.com/flutter/engine.git.  If you want to use your own fork, set this variable to point to your fork's url.
-
-### LLVM_TARGETS_TO_BUILD
-List of Targets LLVM should be built with.  Relavant to Flutter the options are:
-"AArch64;ARM;X86".  Host architecture (x86_64) is implicit, as that is the expected build host.  If crosscompiling compiler-rt, libcxxabi, and libcxx the current scheme expects only a single value for LLVM_TARGETS_TO_BUILD.
-
-### BUILD_COMPILER_RT
-Checks out and builds compiler-rt for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LIBCXXABI
-Checks out and builds libcxxabi for host and target.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LIBCXX
-Checks out and builds libcxx.  Default value is ON, and valid only when TOOLCHAIN_DIR is not set.
-
-### BUILD_LLD
-Checks out and builds lld.  Default value is OFF, and valid only when TOOLCHAIN_DIR is not set.  This option enables the use of "-fuse-ld=lld".
 
 ### ENGINE_UNOPTIMIZED
 Unoptimized flag, defaults to OFF
@@ -229,8 +203,7 @@ When adding in Linux support to the Dart code, start by adding "case TargetPlatf
     cd {flutter app project folder}
     flutter build bundle
 
-*Note: You either need to override debugDefaultTargetPlatformOverride, or 
-"Enable Linux as a Platform in your Flutter Repo"*
+*Note: You either need to override TargetPlatform prior to running the app*
 
 ## Tested Flutter Examples
 
@@ -241,12 +214,10 @@ Tested apps post Flutter Dart "linux" platfrom add
     flutter/examples/flutter_view
     flutter/examples/hello_world
     flutter/examples/layers * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
-    flutter/examples/platform_channel *requires MessageCallback impl for 100%
+    flutter/examples/platform_channel
     flutter/examples/platform_view * Android view not impl.. no-op btn
     flutter/examples/stocks
     flutter-desktop-embedding/example/flutter_app
-
-Depending on the app, be preapred for Dart runtime exceptions.  Refer to https://github.com/flutter/flutter/issues
 
 ### Push built Flutter Application to Target
 

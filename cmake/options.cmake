@@ -22,13 +22,34 @@
 # SOFTWARE.
 #
 
-set(FLUTTER_TARGET_NAME "Wayland")
-ExternalProject_Add(wayland_flutter
-    GIT_REPOSITORY https://github.com/jwinarske/flutter_wayland.git
-    GIT_TAG waylandpp
-    GIT_SHALLOW 1
-    BUILD_IN_SOURCE 0
-    PATCH_COMMAND ""
-    UPDATE_COMMAND ""
-)
-add_dependencies(wayland_flutter engine)
+option(BUILD_PLATFORM_SYSROOT "Build Platform sysroot" ON)
+option(BUILD_PLATFORM_SYSROOT_RPI "Build Raspberry Pi Sysroot" ON)
+
+option(BUILD_FLUTTER_RPI "Build RPI Flutter Shell" OFF)
+option(BUILD_PI_USERLAND "Build Pi userland repo - !!replaces sysroot/opt/vc!!" OFF)
+option(BUILD_HELLO_PI "Build the apps in {sysroot}/opt/vc/src/hello_pi" ON)
+option(BUILD_TSLIB "Checkout and build tslib for target" ON)
+
+option(BUILD_FLUTTER_WAYLAND "Build Wayland Flutter Shell" ON)
+
+if(NOT TARGET_ARCH)
+    set(TARGET_ARCH "arm" CACHE STRING "Choose the target arch, options are: x64, x86, arm64, or arm." FORCE)
+    message(STATUS "ENGINE_RUNTIME_MODE not set, defaulting to arm.")
+endif()
+
+if(NOT TARGET_SYSROOT)
+    set(TARGET_SYSROOT "${CMAKE_SOURCE_DIR}/sysroot")
+endif()
+
+if(NOT THIRD_PARTY_DIR)
+    SET(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
+endif()
+
+if(NOT TOOLCHAIN_DIR)
+    # TODO - only tested with linux
+    set(TOOLCHAIN_DIR "${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang")
+endif()
+
+if(NOT DEPOT_TOOLS_DIR)
+    SET(DEPOT_TOOLS_DIR "${THIRD_PARTY_DIR}/depot_tools")
+endif()

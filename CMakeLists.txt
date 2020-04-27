@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 Joel Winarske
+# Copyright (c) 2018-2020 Joel Winarske
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,9 @@
 
 cmake_minimum_required(VERSION 3.11)
 
-if(POLICY CMP0068)
-  cmake_policy(SET CMP0068 NEW)
-  set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
-endif()
-
-if(POLICY CMP0075)
-  cmake_policy(SET CMP0075 NEW)
-endif()
-
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-    message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to MinSizeRel.")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
+    message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to Release.")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
@@ -51,25 +42,19 @@ project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
 
-option(BUILD_PLATFORM_SYSROOT "Build Platform sysroot" ON)
+include(ProcessorCount)
+ProcessorCount(NUM_PROC)
 
-option(BUILD_RPI_FLUTTER "Build Flutter for Raspberry Pi" ON)
-option(BUILD_WAYLAND_FLUTTER "Build Flutter for Wayland" OFF)
 
-include(build_dependencies)
+include(options)
+include(sysroot)
+include(depot_tools)
+include(engine)
 
-if(ANDROID)
-    set(FLUTTER_TARGET_NAME "Android")
-else()
 
-    if(BUILD_RPI_FLUTTER)
-        include(rpi)
-    
-    elseif(BUILD_WAYLAND_FLUTTER)
-        include(wayland)
+if(BUILD_FLUTTER_RPI)
+    include(rpi)
 
-    endif()
-
+elseif(BUILD_FLUTTER_WAYLAND)
+    include(wayland)
 endif()
-
-message(STATUS "Flutter ................ ${FLUTTER_TARGET_NAME}")

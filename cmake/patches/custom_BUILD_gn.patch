@@ -1,0 +1,50 @@
+diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
+index fb0f3c3..69bbf7e 100644
+--- a/build/config/sysroot.gni
++++ b/build/config/sysroot.gni
+@@ -27,7 +27,7 @@ if (current_toolchain == default_toolchain && target_sysroot != "") {
+ } else if (is_linux && !is_chromeos) {
+   if (current_cpu == "mipsel") {
+     sysroot = rebase_path("//mipsel-sysroot/sysroot")
+-  } else if (use_default_linux_sysroot && !is_fuchsia && current_cpu == "x64") {
++  } else if (use_default_linux_sysroot && !is_fuchsia && target_cpu == "x64") {
+     sysroot = rebase_path("//build/linux/debian_sid_amd64-sysroot")
+     assert(
+         exec_script("//build/dir_exists.py", [ sysroot ], "string") == "True",
+diff --git a/build/toolchain/custom/BUILD.gn b/build/toolchain/custom/BUILD.gn
+index 65b1623..9de1f04 100644
+--- a/build/toolchain/custom/BUILD.gn
++++ b/build/toolchain/custom/BUILD.gn
+@@ -12,16 +12,15 @@ toolchain("custom") {
+   # these values in our scope.
+   cc = "${toolchain_bin}/clang"
+   cxx = "${toolchain_bin}/clang++"
+-  ar = "${toolchain_bin}/${custom_target_triple}-ar"
++  ar = "${toolchain_bin}/llvm-ar"
+   ld = "${toolchain_bin}/clang++"
+-  readelf = "${toolchain_bin}/${custom_target_triple}-readelf"
+-  nm = "${toolchain_bin}/${custom_target_triple}-nm"
+-  strip = "${toolchain_bin}/${custom_target_triple}-strip"
++  readelf = "${toolchain_bin}/llvm-readelf"
++  nm = "${toolchain_bin}/llvm-nm"
++  strip = "${toolchain_bin}/llvm-strip"
+ 
+   target_triple_flags = "--target=${custom_target_triple}"
+   sysroot_flags = "--sysroot ${custom_sysroot}"
+ 
+-  custom_lib_flags = "-L${custom_toolchain}/lib"
+ 
+   # These library switches can apply to all tools below.
+   lib_switch = "-l"
+diff --git a/build/toolchain/custom/custom.gni b/build/toolchain/custom/custom.gni
+index 6d7bc6c..f1ea197 100644
+--- a/build/toolchain/custom/custom.gni
++++ b/build/toolchain/custom/custom.gni
+@@ -14,4 +14,7 @@ declare_args() {
+ 
+   # The target triple. For example: arm-linux-gnueabihf.
+   custom_target_triple = ""
++
++  # Values to pass to the linker
++  custom_lib_flags = ""
+ }
