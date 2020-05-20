@@ -31,6 +31,8 @@ Yocto Layer to build Engine, Wayland shell, and Gallery App can be found here:  
 
 2. Sysroot compatible with the Clang runtime flavors
 
+3. Linux system to build on
+
 
   *Notes:*
   *LLVM runtime libraries do not support soft floating point. Google does not support armv6 in Dart.  It's fairly straight forward to patch and build for armv6, but you will hit problems in Dart.*
@@ -42,8 +44,7 @@ Yocto Layer to build Engine, Wayland shell, and Gallery App can be found here:  
     cd flutter_embedded
     mkdir build && cd build
     cmake ..
-    make -j8
-    make package
+    make package -j8
 
 To enable build spew:
 
@@ -57,8 +58,7 @@ To enable build spew:
     cd flutter_embedded
     mkdir build && cd build
     cmake .. -DBUILD_PLATFORM_SYSROOT=OFF -DTARGET_SYSROOT=/media/joel/rootfs -DBUILD_FLUTTER_PI=ON -DBUILD_GLFW_FLUTTER=OFF
-    make -j8
-    make package
+    make package -j8
 
 *Note*: this requires the following pacakges installed on your target: 
 
@@ -68,8 +68,7 @@ To enable build spew:
 To switch channels add variable CHANNEL to cmake invocation.  Like this
 
     cmake .. -DCHANNEL=beta
-    make -j8
-    make package
+    make package -j8
 
 To build all channels of Engine/GLFW shell for Raspberry Pi armv7 in your nightly CI build job, you could do this
 
@@ -100,14 +99,12 @@ To build all channels of Engine/GLFW shell for Raspberry Pi armv7 in your nightl
     cd flutter_embedded
     mkdir build && cd build
     cmake .. -DENGINE_DISABLE_DESKTOP=OFF -DENGINE_EMBEDDER_FOR_TARGET=OFF -DBUILD_FLUTTER_RPI=OFF -DBUILD_PLATFORM_SYSROOT=OFF -DTARGET_SYSROOT=/usr -DTARGET_ARCH=x64 -DBUILD_PLATFORM_SYSROOT_RPI=OFF
-    make -j8
-    make package
+    make package -j8
 
 To switch to building flutter_glfw (TARGET) be sure to undefine the variables set prior.
 
     cmake .. -UENGINE_DISABLE_DESKTOP -UENGINE_EMBEDDER_FOR_TARGET -DBUILD_FLUTTER_RPI=ON -DBUILD_PLATFORM_SYSROOT=ON -UTARGET_SYSROOT -UTARGET_ARCH -DBUILD_PLATFORM_SYSROOT_RPI=ON
-    make -j8
-    make package
+    make package -j8
 
 ## Build gtk3+ dependent engine (stable channel) for TARGET
 
@@ -115,8 +112,7 @@ To switch to building flutter_glfw (TARGET) be sure to undefine the variables se
     cd flutter_embedded
     mkdir build && cd build
     cmake .. -DENGINE_DISABLE_DESKTOP=OFF -DENGINE_EMBEDDER_FOR_TARGET=OFF
-    make -j8
-    make package
+    make package -j8
 
 # Override Variables
 To use the override variables, pass them in with the cmake command.  One example
