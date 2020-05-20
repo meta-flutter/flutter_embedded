@@ -77,29 +77,22 @@ To build all channels of Engine/GLFW shell for Raspberry Pi armv7 in your nightl
     cd flutter_embedded
     mkdir build && cd build
     cmake ..
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=beta
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=dev
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=master
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=stable -DENGINE_RUNTIME_MODE=release
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=beta
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=dev
-    make -j8
-    make package
+    make package -j8
     cmake .. -DCHANNEL=master
-    make -j8
-    make package
+    make package -j8
+
 
 ## Build gtk3+ dependent engine (stable channel) for HOST
 
@@ -392,17 +385,3 @@ Run the debugger, once breakpoint hits, change to the Debugger Console window, a
     set step-mode on
 
 Step into FlutterEngineRun()
-
-
-# Reference Links
-http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
-
-https://github.com/flutter/flutter/wiki/Compiling-the-engine
-
-https://github.com/flutter/flutter/wiki/Setting-up-the-Engine-development-environment
-
-https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#libc
-
-https://github.com/kergoth/tslib
-
-http://geomodule.com/sw-eng-notes/2017/03/25/raspberry-pi-debugging-with-gdb-command-line/
