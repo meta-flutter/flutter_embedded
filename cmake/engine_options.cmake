@@ -253,6 +253,7 @@ else()
         # Target Link Flags
         if(${CHANNEL} STREQUAL "stable")
             list(APPEND TARGET_CXX_LINK_FLAGS -L${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/lib/clang/${LLVM_VERSION}/armv7-linux-gnueabihf/lib)
+            list(APPEND TARGET_CXX_LINK_FLAGS -lpthread)
         else()
             list(APPEND TARGET_CXX_LINK_FLAGS ${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/lib/armv7-unknown-linux-gnueabihf/c++/libc++.a)
             list(APPEND TARGET_CXX_LINK_FLAGS -L${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/lib/clang/${LLVM_VERSION}/lib/armv7-unknown-linux-gnueabihf)
