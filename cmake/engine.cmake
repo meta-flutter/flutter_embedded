@@ -62,7 +62,7 @@ ExternalProject_Add(engine
 
 add_dependencies(engine depot_tools)
 if(BUILD_PLATFORM_SYSROOT)
-    add_dependencies(engine sysroot)
+    add_dependencies(engine symlink_fixups)
 endif()
 
 set(ENGINE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL})
