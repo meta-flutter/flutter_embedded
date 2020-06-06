@@ -39,15 +39,15 @@ ExternalProject_Add(engine
     DOWNLOAD_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} && cd ${ENGINE_SRC_PATH} &&
 	PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} gclient config --spec ${GCLIENT_CONFIG} &&
-	PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v && sync
+	PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v
     PATCH_COMMAND 
-        ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET} && sync
+        ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         cd ${ENGINE_SRC_PATH}/src &&
         PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
-        ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE} && sync
+        ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
