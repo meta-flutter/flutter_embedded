@@ -45,13 +45,12 @@ ExternalProject_Add(engine
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         cd ${ENGINE_SRC_PATH}/src &&
-        PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./flutter/tools/gn ${ENGINE_FLAGS} &&
+        PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
-        ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
-        PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ninja -j ${NUM_PROC} -C ${ENGINE_OUT_DIR}
+        PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ninja -j ${NUM_PROC} -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         cd ${ENGINE_SRC_PATH}/src &&
