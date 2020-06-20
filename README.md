@@ -155,17 +155,18 @@ Enable link-time optimization, defaults to ON
 ### ENGINE_EMBEDDER_FOR_TARGET
 Embedder for Target, defaults to ON
 
-### ENGINE_ENABLE_VULCAN
-Enable Vulcan, defaults to OFF
+### ENGINE_ENABLE_VULKAN
+Enable Vulkan, defaults to OFF
 
 # Android
 Example building Android engine.  The flutter engine uses it's own NDK copy.  So passing in the toolchain file is for project builds (your own executables and libraries).
 
     cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=~/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=17
     autoninja
-    cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=~/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake -DENGINE_ENABLE_VULCAN=on -DANDROID_ABI=x86_64
+    cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=~/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake -DENGINE_ENABLE_VULKAN=on -DANDROID_ABI=x86_64
     autoninja
-    cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=~/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake -DENGINE_ENABLE_VULCAN=off -DANDROID_ABI=armeabi-v7a
+    cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=~/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake -DENGINE_ENABLE_VULKAN=off -DANDROID_ABI=armeabi-v7a
+
     autoninja
 
 # Raspberry Pi
