@@ -22,9 +22,6 @@
 # SOFTWARE.
 #
 
-find_program(gclient REQUIRED)
-
-
 if(NOT ENGINE_REPO)
     set(ENGINE_REPO git@github.com:flutter/engine.git)
 endif()
@@ -37,20 +34,24 @@ include(engine_options)
 
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND
-        ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} && cd ${ENGINE_SRC_PATH} &&
-	PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} gclient config --spec ${GCLIENT_CONFIG} &&
-	PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v
-    PATCH_COMMAND 
-        ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET}
+        ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
+        cd ${ENGINE_SRC_PATH} &&
+        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
+        gclient config --spec ${GCLIENT_CONFIG} &&
+        gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v
+    PATCH_COMMAND ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         cd ${ENGINE_SRC_PATH}/src &&
-        PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./flutter/tools/gn ${ENGINE_FLAGS} &&
+        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
+        export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
         cd ${ENGINE_SRC_PATH}/src &&
-        PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ninja -j ${NUM_PROC} -C ${ENGINE_OUT_DIR}
+        export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        ninja -j ${NUM_PROC} -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         cd ${ENGINE_SRC_PATH}/src &&

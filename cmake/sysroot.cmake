@@ -24,14 +24,11 @@
 
 include(ExternalProject)
 
-find_program(RSYNC rsync)
-
 #
 # Avoid downloading img file, and the ensuing su mount.
 # Useful when you don't have the target available.
 #
 if(BUILD_PLATFORM_SYSROOT)
-
 
     if(BUILD_PLATFORM_SYSROOT_RPI)
 
@@ -61,8 +58,6 @@ if(BUILD_PLATFORM_SYSROOT)
         set(ROOTFS_ARCHIVE_URL ${ROOTFS_ARCHIVE_BASE_URL}${ROOTFS_ARCHIVE_VERSION}/${ROOTFS_ARCHIVE_NAME}.${ROOTFS_ARCHIVE_EXT})
         MESSAGE(STATUS "Rootfs Archive Url ..... ${ROOTFS_ARCHIVE_URL}")
 
-        find_program(tar REQUIRED)
-
         # limit what is extracted saving time and space
         set(ARCHIVE_FILE_PATH ${CMAKE_BINARY_DIR}/sysroot-prefix/src/${ROOTFS_ARCHIVE_NAME}.${ROOTFS_ARCHIVE_EXT})
         set(ARCHIVE_EXTRACT_CMD
@@ -84,8 +79,6 @@ if(BUILD_PLATFORM_SYSROOT)
         INSTALL_COMMAND ${ARCHIVE_EXTRACT_CMD}
     )
 
-    find_program(python REQUIRED)
-    find_program(chmod REQUIRED)
     set(SYMLINK_FIXUP_SCRIPT ${CMAKE_BINARY_DIR}/symlink_fixups-prefix/src/sysroot-relativelinks.py)
     ExternalProject_Add(symlink_fixups
         URL https://raw.githubusercontent.com/Kukkimonsuta/rpi-buildqt/master/scripts/utils/sysroot-relativelinks.py
@@ -99,7 +92,7 @@ if(BUILD_PLATFORM_SYSROOT)
 #
 # rsync sysroot
 #
-elseif(RSYNC AND TARGET_HOSTNAME)
+elseif(TARGET_HOSTNAME)
 
     MESSAGE(STATUS "Syncing sysroot from '${TARGET_HOSTNAME}'")
 
