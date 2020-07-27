@@ -28,7 +28,7 @@ toolchain("custom") {
 
   tool("cc") {
     depfile = "{{output}}.d"
-    command = "$cc -MD -MF $depfile $target_triple_flags $sysroot_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -flto=thin -c {{source}} -o {{output}}"
+    command = "$cc -MD -MF $depfile $target_triple_flags $sysroot_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -nostdlib++ -flto -fuse-ld=lld -Wno-unused-command-line-argument -c {{source}} -o {{output}}"
     depsformat = "gcc"
     description = "CC {{output}}"
     outputs = [
@@ -38,7 +38,7 @@ toolchain("custom") {
 
   tool("cxx") {
     depfile = "{{output}}.d"
-    command = "$cxx -MD -MF $depfile $target_triple_flags $sysroot_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -flto=thin -c {{source}} -o {{output}}"
+    command = "$cxx -MD -MF $depfile $target_triple_flags $sysroot_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -nostdlib++ -flto -fuse-ld=lld -Wno-unused-command-line-argument -c {{source}} -o {{output}}"
     depsformat = "gcc"
     description = "CXX {{output}}"
     outputs = [
@@ -80,13 +80,13 @@ toolchain("custom") {
     # existing .TOC file, overwrite it, otherwise, don't change it.
     tocfile = sofile + ".TOC"
     temporary_tocname = sofile + ".tmp"
-    link_command = "$ld $target_triple_flags $sysroot_flags -shared @ENGINE_LIB_FLAGS@ -o $unstripped_sofile -Wl,--build-id=sha1 -Wl,-soname=$soname @$rspfile"
+
+    link_command = "$ld $target_triple_flags $sysroot_flags @ENGINE_LIB_FLAGS@ -shared -Wl,--build-id=sha1 -Wl,-soname=$soname -o $unstripped_sofile @$rspfile -v"
     toc_command = "{ $readelf -d $unstripped_sofile | grep SONAME ; $nm -gD -f posix $unstripped_sofile | cut -f1-2 -d' '; } > $temporary_tocname"
     replace_command = "if ! cmp -s $temporary_tocname $tocfile; then mv $temporary_tocname $tocfile; fi"
     strip_command = "$strip -o $sofile $unstripped_sofile"
 
-    command =
-        "$link_command && $toc_command && $replace_command && $strip_command"
+    command = "$link_command && $toc_command && $replace_command && $strip_command"
     rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}}"
 
     description = "SOLINK $sofile"
