@@ -79,7 +79,7 @@ if(BUILD_GLFW_FLUTTER)
     )
     add_dependencies(glfw engine)
 
-    ExternalProject_Add(glfw_flutter
+    ExternalProject_Add(flutter-glfw
         DOWNLOAD_COMMAND ""
         SOURCE_DIR ${THIRD_PARTY_DIR}/engine/src/flutter/examples/glfw
         BUILD_IN_SOURCE 0
@@ -96,11 +96,20 @@ if(BUILD_GLFW_FLUTTER)
             -DFLUTTER_LIB=${ENGINE_LIBRARIES_DIR}/libflutter_engine.so
             -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE=${PACKAGE_ARCH}
     )
-    add_dependencies(glfw_flutter engine)
-    add_dependencies(glfw_flutter glfw)
+    add_dependencies(flutter-glfw engine)
+    add_dependencies(flutter-glfw glfw)
+
+    ExternalProject_Add_Step(flutter-glfw package
+        DEPENDEES install
+        COMMAND cpack --config ${CMAKE_BINARY_DIR}/flutter-glfw-prefix/src/flutter-glfw-build/CPackConfig.cmake
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Creating flutter-glfw Package"
+        BYPRODUCTS flutter-glfw-1.0.0-Linux-${PACKAGE_ARCH}.deb
+        ALWAYS FALSE
+    )
 
     #
-    # Install
+    # Add to main package
     #
     install(FILES
         ${EXT_CMAKE_STAGING_PREFIX}/lib/libglfw.so
@@ -109,11 +118,6 @@ if(BUILD_GLFW_FLUTTER)
 
         DESTINATION
         lib${INSTALL_TRIPLE_SUFFIX}
-    )
-
-    install(PROGRAMS
-        ${EXT_CMAKE_STAGING_PREFIX}/bin/flutter_glfw
-        DESTINATION bin
     )
 
 endif()

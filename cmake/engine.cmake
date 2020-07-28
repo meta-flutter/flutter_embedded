@@ -23,7 +23,7 @@
 #
 
 if(NOT ENGINE_REPO)
-    set(ENGINE_REPO git@github.com:flutter/engine.git)
+    set(ENGINE_REPO https://github.com/flutter/engine.git)
 endif()
 MESSAGE(STATUS "Engine Repo ............ ${ENGINE_REPO}")
 

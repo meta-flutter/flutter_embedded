@@ -12,7 +12,7 @@ toolchain("custom") {
   # these values in our scope.
   cc = "${toolchain_bin}/clang"
   cxx = "${toolchain_bin}/clang++"
-  ar = "${toolchain_bin}/llvm-ar"
+  # ar = "${toolchain_bin}/llvm-ar"
   ld = "${toolchain_bin}/clang++"
   readelf = "${toolchain_bin}/llvm-readelf"
   nm = "${toolchain_bin}/llvm-nm"
@@ -58,7 +58,7 @@ toolchain("custom") {
 
   tool("alink") {
     rspfile = "{{output}}.rsp"
-    command = "rm -f {{output}} && $ar rcs {{output}} @$rspfile"
+    command = "rm -f {{output}} && ${toolchain_bin}/llvm-ar rcs {{output}} @$rspfile"
     description = "AR {{output}}"
     rspfile_content = "{{inputs}}"
     outputs = [
