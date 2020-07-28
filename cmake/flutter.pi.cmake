@@ -149,7 +149,6 @@ target_compile_options(flutter-pi PRIVATE
 
 install(TARGETS flutter-pi RUNTIME DESTINATION bin)
 
-set(CMAKE_SKIP_RPATH TRUE)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_VENDOR "JoWi Electronics")
