@@ -359,4 +359,4 @@ if(ENGINE_FORCE_DOWNLOAD)
 endif()
 
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/files/BUILD.gn ${CMAKE_BINARY_DIR}/BUILD.gn @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/files/toolchain.custom.BUILD.gn ${CMAKE_BINARY_DIR}/toolchain.custom.BUILD.gn @ONLY)

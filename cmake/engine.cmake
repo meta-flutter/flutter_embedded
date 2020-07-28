@@ -44,9 +44,9 @@ ExternalProject_Add(engine
     CONFIGURE_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/toolchain.custom.BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
         ./flutter/tools/gn ${ENGINE_FLAGS} &&
-        ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
