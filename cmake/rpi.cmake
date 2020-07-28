@@ -124,7 +124,7 @@ if(BUILD_FLUTTER_PI)
         GIT_SHALLOW true
         BUILD_IN_SOURCE 0
         PATCH_COMMAND
-            ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/files/flutter-pi.cmake ${FLUTTER_PI_SOURCE_DIR}/CMakeLists.txt &&
+            ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/flutter.pi.cmake ${FLUTTER_PI_SOURCE_DIR}/CMakeLists.txt &&
             ${CMAKE_COMMAND} -E copy ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR}/${ENGINE_HEADER} ${FLUTTER_PI_SOURCE_DIR}-build
         UPDATE_COMMAND ""
         CMAKE_ARGS
