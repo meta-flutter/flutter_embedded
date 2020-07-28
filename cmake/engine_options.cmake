@@ -51,12 +51,13 @@ endif()
 if(NOT ENGINE_PATCH_SET)
     set(ENGINE_PATCH_SET
         cd ${ENGINE_SRC_PATH}/src/third_party/icu &&
-        git apply ${CMAKE_SOURCE_DIR}/cmake/files/icu.patch
+        git apply ${CMAKE_SOURCE_DIR}/cmake/files/icu.patch &&
+        ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/flutter.glfw.cmake ${THIRD_PARTY_DIR}/engine/src/flutter/examples/glfw/CMakeLists.txt
     )
 endif()
 if(NOT CHANNEL)
-    set(CHANNEL "stable" CACHE STRING "Choose the channel, options are: master, dev, beta, stable" FORCE)
-    message(STATUS "Flutter Channel not set, defaulting to stable")
+    set(CHANNEL "beta" CACHE STRING "Choose the channel, options are: master, dev, beta, stable" FORCE)
+    message(STATUS "Flutter Channel not set, defaulting to beta")
 endif()
 
 if(${PREV_CHANNEL} NOT STREQUAL ${CHANNEL})
@@ -218,8 +219,9 @@ else()
 
         if(BUILD_PLATFORM_SYSROOT_RPI)
             set(TARGET_TRIPLE armv7-neon-vfpv4-linux-gnueabihf)
-            set(TUNEABI cortexa7t2hf)
+            set(TUNEABI cortex-a53+crc) # RPI3, for RPI4 use cortex-a72+crc+crypto
             set(PACKAGE_LIB_PATH_SUFFIX /${TARGET_TRIPLE_RUNTIME})
+            set(INSTALL_TRIPLE_SUFFIX /tls/v7l/neon/vfp)
         endif()
 
         # missing in stable channel
@@ -235,9 +237,11 @@ else()
         )
 
         # Engine Link Flags
-        list(APPEND ENGINE_LIB_FLAGS -Wl,-z,notext)
+#        list(APPEND ENGINE_LIB_FLAGS -Wl,-z,notext)
         list(APPEND ENGINE_LIB_FLAGS -nostdlib++)
         list(APPEND ENGINE_LIB_FLAGS -fuse-ld=lld)
+        list(APPEND ENGINE_LIB_FLAGS -rtlib=compiler-rt)
+        list(APPEND ENGINE_LIB_FLAGS -Wl,--build-id=sha1)
         string(REPLACE ";" " " ENGINE_LIB_FLAGS "${ENGINE_LIB_FLAGS}")
 
         # Target CXX Flags
@@ -250,8 +254,9 @@ else()
             list(APPEND TARGET_CXX_FLAGS -DGLFW_EXPOSE_NATIVE_EGL)
             list(APPEND TARGET_CXX_FLAGS -DGLFW_INCLUDE_ES2)
         endif()
-        list(APPEND TARGET_CXX_FLAGS -flto=thin)
-        string(REPLACE ";" " " TARGET_CXX_FLAGS "${TARGET_CXX_FLAGS} -dl")
+        list(APPEND TARGET_CXX_FLAGS -flto)
+        list(APPEND TARGET_CXX_FLAGS -fPIC)
+        string(REPLACE ";" " " TARGET_CXX_FLAGS "${TARGET_CXX_FLAGS}")
 
         # Target Link Flags
         if(${CHANNEL} STREQUAL "stable")
@@ -296,7 +301,7 @@ else()
     list(APPEND ENGINE_FLAGS --target-sysroot ${TARGET_SYSROOT})
     list(APPEND ENGINE_FLAGS --target-toolchain ${TOOLCHAIN_DIR})
     list(APPEND ENGINE_FLAGS --target-triple ${TARGET_TRIPLE})
-  
+
     set(TARGET_OS linux)
 
 endif()

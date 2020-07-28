@@ -36,8 +36,7 @@ if(NOT BUILD_NUMBER)
 endif()
 set(FLUTTER_EMBEDDED_VERSION 1.0.${BUILD_NUMBER})
 
-set(PACKAGE_NAME flutter-embedded)
-project(${PACKAGE_NAME} VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
+project(flutter-embedded VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
 
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
@@ -57,3 +56,5 @@ if(BUILD_FLUTTER_RPI)
 elseif(BUILD_FLUTTER_WAYLAND)
     include(wayland)
 endif()
+
+include(packaging)

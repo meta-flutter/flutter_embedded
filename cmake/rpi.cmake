@@ -33,8 +33,12 @@ if(BUILD_TSLIB AND NOT ANDROID)
         UPDATE_COMMAND ""
         CMAKE_ARGS
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/target.toolchain.cmake
-        -DCMAKE_INSTALL_PREFIX=${TARGET_SYSROOT}
+        -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        -DCMAKE_STAGING_PREFIX=${EXT_CMAKE_STAGING_PREFIX}
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
         -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_PREFIX}/lib${INSTALL_TRIPLE_SUFFIX}
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
         -DENABLE_TOOLS=ON
     )
@@ -46,58 +50,67 @@ endif()
 #
 if(BUILD_GLFW_FLUTTER)
 
-    if(BUILD_PLATFORM_SYSROOT)
-        ExternalProject_Add(glfw
-            GIT_REPOSITORY https://github.com/glfw/glfw.git
-            GIT_TAG 3.3.2
-            GIT_SHALLOW true
-            BUILD_IN_SOURCE 0
-            UPDATE_COMMAND ""
-            CMAKE_ARGS
-                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/target.toolchain.cmake
-                -DCMAKE_INSTALL_PREFIX=${TARGET_SYSROOT}/usr
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                -DBUILD_SHARED_LIBS=ON
-                -DGLFW_BUILD_EXAMPLES=OFF
-                -DGLFW_BUILD_TESTS=OFF
-                -DGLFW_BUILD_DOCS=OFF
-                -DGLFW_USE_OSMESA=ON
-                -DCMAKE_VERBOSE_MAKEFILE=TRUE
-                -DCMAKE_THREAD_LIBS_INIT=-lpthread
-                -DCMAKE_HAVE_THREADS_LIBRARY=1
-                -DCMAKE_USE_PTHREADS_INIT=1
-                -DTHREADS_PREFER_PTHREAD_FLAG=ON
-        )
-        add_dependencies(glfw engine)
-    endif()
+    ExternalProject_Add(glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.3.2
+        GIT_SHALLOW true
+        BUILD_IN_SOURCE 0
+        UPDATE_COMMAND ""
+        CMAKE_ARGS
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/target.toolchain.cmake
+            -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_STAGING_PREFIX=${EXT_CMAKE_STAGING_PREFIX}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_PREFIX}/lib${INSTALL_TRIPLE_SUFFIX}
+            -DCMAKE_VERBOSE_MAKEFILE=ON
+            -DCMAKE_THREAD_LIBS_INIT=-lpthread
+            -DCMAKE_HAVE_THREADS_LIBRARY=1
+            -DCMAKE_USE_PTHREADS_INIT=1
+            -DTHREADS_PREFER_PTHREAD_FLAG=ON
+            -DBUILD_SHARED_LIBS=ON
+            -DGLFW_BUILD_EXAMPLES=OFF
+            -DGLFW_BUILD_TESTS=OFF
+            -DGLFW_BUILD_DOCS=OFF
+            -DGLFW_USE_OSMESA=ON
+    )
+    add_dependencies(glfw engine)
 
     ExternalProject_Add(glfw_flutter
         DOWNLOAD_COMMAND ""
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/flutter.glfw.cmake ${THIRD_PARTY_DIR}/engine/src/flutter/examples/glfw/CMakeLists.txt
         SOURCE_DIR ${THIRD_PARTY_DIR}/engine/src/flutter/examples/glfw
         BUILD_IN_SOURCE 0
         CMAKE_ARGS
             -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/target.toolchain.cmake
+            -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_STAGING_PREFIX=${EXT_CMAKE_STAGING_PREFIX}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
-#            -DGLFW_LIB=${TARGET_SYSROOT}/usr/lib/libglfw3.so
+            -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_PREFIX}/lib${INSTALL_TRIPLE_SUFFIX}
+            -DCMAKE_VERBOSE_MAKEFILE=ON
+            -DGLFW_LIB=${EXT_CMAKE_STAGING_PREFIX}/lib/libglfw.so.3.3
+            -DGLFW_INCLUDE_PATH=${EXT_CMAKE_STAGING_PREFIX}/include/GLFW
             -DFLUTTER_LIB=${ENGINE_LIBRARIES_DIR}/libflutter_engine.so
             -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE=${PACKAGE_ARCH}
-        INSTALL_COMMAND ""
     )
     add_dependencies(glfw_flutter engine)
-    if(BUILD_PLATFORM_SYSROOT)
-        add_dependencies(glfw_flutter glfw)
-    endif()
+    add_dependencies(glfw_flutter glfw)
 
-    ExternalProject_Add_Step(glfw_flutter package
-        DEPENDEES install
-        COMMAND cpack --config ./glfw_flutter-prefix/src/glfw_flutter-build/CPackConfig.cmake
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMENT "Creating flutter-glfw Package"
-        BYPRODUCTS flutter-glfw-1.0.0-Linux-${PACKAGE_ARCH}.deb
-        ALWAYS FALSE
+    #
+    # Install
+    #
+    install(FILES
+        ${EXT_CMAKE_STAGING_PREFIX}/lib/libglfw.so
+        ${EXT_CMAKE_STAGING_PREFIX}/lib/libglfw.so.3
+        ${EXT_CMAKE_STAGING_PREFIX}/lib/libglfw.so.3.3
+
+        DESTINATION
+        lib${INSTALL_TRIPLE_SUFFIX}
+    )
+
+    install(PROGRAMS
+        ${EXT_CMAKE_STAGING_PREFIX}/bin/flutter_glfw
+        DESTINATION bin
     )
 
 endif()
@@ -110,19 +123,21 @@ if(BUILD_FLUTTER_PI)
         GIT_TAG master
         GIT_SHALLOW true
         BUILD_IN_SOURCE 0
-        PATCH_COMMAND 
-            ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/flutter.pi.cmake ${FLUTTER_PI_SOURCE_DIR}/CMakeLists.txt &&
-            ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CHANNEL}/${ENGINE_HEADER} ${FLUTTER_PI_SOURCE_DIR}-build
+        PATCH_COMMAND
+            ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/files/flutter-pi.cmake ${FLUTTER_PI_SOURCE_DIR}/CMakeLists.txt &&
+            ${CMAKE_COMMAND} -E copy ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR}/${ENGINE_HEADER} ${FLUTTER_PI_SOURCE_DIR}-build
         UPDATE_COMMAND ""
         CMAKE_ARGS
             -DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/target.toolchain.cmake
+            -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_STAGING_PREFIX=${EXT_CMAKE_STAGING_PREFIX}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_PREFIX}/lib${INSTALL_TRIPLE_SUFFIX}
             -DCMAKE_VERBOSE_MAKEFILE=ON
-            -DFLUTTER_ENGINE_LIBRARY=${CMAKE_BINARY_DIR}/${CHANNEL}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+            -DFLUTTER_ENGINE_LIBRARY=${ENGINE_LIBRARIES_DIR}/libflutter_engine.so
             -DPKG_CONFIG_PATH=${PKG_CONFIG_PATH}
             -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE=${PACKAGE_ARCH}
-        INSTALL_COMMAND ""
     )
     add_dependencies(flutter-pi engine)
 

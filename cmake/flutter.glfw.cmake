@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 
 project(flutter-glfw VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(flutter_glfw FlutterEmbedderGLFW.cc)
 
@@ -27,18 +28,3 @@ find_library(FLUTTER_LIB flutter_engine PATHS ${CMAKE_SOURCE_DIR}/../../../out/h
 target_link_libraries(flutter_glfw ${FLUTTER_LIB} -ldl)
 
 install(TARGETS flutter_glfw RUNTIME DESTINATION bin)
-
-set(CMAKE_SKIP_RPATH TRUE)
-
-set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_VENDOR "JoWi Electronics")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Joel Winarske")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../../LICENSE")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
-set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
-
-include(CPack)
-
-# To use this:
-# make package
-# sudo dpkg -i flutter-glfw-1.0.0-Linux-armhf.deb

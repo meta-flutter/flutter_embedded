@@ -34,24 +34,25 @@ include(engine_options)
 
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND
+        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
-        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         gclient config --spec ${GCLIENT_CONFIG} &&
         gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v
     PATCH_COMMAND ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
-        cd ${ENGINE_SRC_PATH}/src &&
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        cd ${ENGINE_SRC_PATH}/src &&
         ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
-        cd ${ENGINE_SRC_PATH}/src &&
+        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
-        ninja -j ${NUM_PROC} -C ${ENGINE_OUT_DIR}
+        cd ${ENGINE_SRC_PATH}/src &&
+        autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         cd ${ENGINE_SRC_PATH}/src &&
@@ -80,29 +81,17 @@ else()
 endif()
 
 install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/icudtl.dat DESTINATION bin)
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION lib${PACKAGE_LIB_PATH_SUFFIX})
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill DESTINATION share/flutter/engine/flutter_patched_sdk)
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.d DESTINATION share/flutter/engine/flutter_patched_sdk)
+
+install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    DESTINATION lib${INSTALL_TRIPLE_SUFFIX})
+
+install(FILES 
+    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill
+    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.d
+    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/vm_outline_strong.dill
+    DESTINATION share/flutter/engine/flutter_patched_sdk)
+
 if(${ENGINE_RUNTIME_MODE} STREQUAL "debug")
-    install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.S DESTINATION share/flutter/engine/flutter_patched_sdk)
+    install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.S
+    DESTINATION share/flutter/engine/flutter_patched_sdk)
 endif()
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/vm_outline_strong.dill DESTINATION share/flutter/engine/flutter_patched_sdk)
-
-#
-# Package - TODO platforms other than Linux
-#
-if(UNIX)
-    set(CPACK_GENERATOR "DEB")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Joel Winarske")
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${PACKAGE_ARCH})
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS)
-endif()
-
-set(CPACK_PACKAGE_NAME ${ENGINE_NAME})
-set(CPACK_PACKAGE_VENDOR "JoWi Electronics")
-set(CPACK_DEFAULT_PACKAGE_DESCRIPTION_SUMMARY "Flutter Embedder Engine - ${ENGINE_RUNTIME_MODE} ${CHANNEL}")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/cmake/files/LICENSE")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
-set(CPACK_PACKAGE_FILE_NAME ${ENGINE_NAME}-${ENGINE_RUNTIME_MODE}-${CHANNEL}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${PACKAGE_ARCH})
-
-include(CPack)
