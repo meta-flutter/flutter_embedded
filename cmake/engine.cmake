@@ -34,7 +34,7 @@ include(engine_options)
 
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND
-        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@3.8.9.chromium.14_bin/python/bin/python2.7 .env &&
+        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@3.8.10.chromium.19_bin/python/bin/python2.7 .env &&
         source .env/bin/activate &&
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
