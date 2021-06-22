@@ -384,7 +384,7 @@ else()
     set(DOWNLOAD_MSVC_DEPS "True")
 endif()
 
-set(GCLIENT_CONFIG "solutions = [{\"managed\": False,\"name\": \"src/flutter\",\"url\": \"https://github.com/flutter/engine.git\",\"deps_file\":\"DEPS\",\"custom_vars\":{\"download_android_deps\":${DOWNLOAD_ANDROID_DEPS},\"download_windows_deps\":${DOWNLOAD_MSVC_DEPS},\"download_linux_deps\":False},},]")
+set(GCLIENT_CONFIG "solutions = [{\"managed\": False,\"name\": \"src/flutter\",\"url\": \"https://github.com/flutter/engine.git\",\"deps_file\":\"DEPS\",\"custom_vars\":{\"download_android_deps\":${DOWNLOAD_ANDROID_DEPS},\"download_windows_deps\":${DOWNLOAD_MSVC_DEPS},\"download_linux_deps\":True},},]")
 
 set(ARGS_GN_FILE ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR}/args.gn)
 
