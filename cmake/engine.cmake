@@ -35,7 +35,7 @@ include(engine_options)
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
-        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@*.*.*.chromium.*_bin/python/bin/python2.7 .env &&
+        virtualenv --python /usr/bin/python2.7 .env &&
         source .env/bin/activate &&
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
@@ -45,7 +45,7 @@ ExternalProject_Add(engine
     CONFIGURE_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
-        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@*.*.*.chromium.*_bin/python/bin/python2.7 .env &&
+        virtualenv --python /usr/bin/python2.7 .env &&
         source .env/bin/activate &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/toolchain.custom.BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
@@ -54,7 +54,7 @@ ExternalProject_Add(engine
     BUILD_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
-        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@*.*.*.chromium.*_bin/python/bin/python2.7 .env &&
+        virtualenv --python /usr/bin/python2.7 .env &&
         source .env/bin/activate &&
         cd ${ENGINE_SRC_PATH}/src &&
         autoninja -C ${ENGINE_OUT_DIR}
