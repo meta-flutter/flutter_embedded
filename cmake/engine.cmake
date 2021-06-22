@@ -34,22 +34,25 @@ include(engine_options)
 
 ExternalProject_Add(engine
     DOWNLOAD_COMMAND
-        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
+        PYTHON2_PATH=bootstrap-2@3.8.9.chromium.14_bin/python/bin \
+        PATH=${THIRD_PARTY_DIR}/depot_tools:${THIRD_PARTY_DIR}/depot_tools/${PYTHON2_PATH}:$ENV{PATH} \
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
         echo ${GCLIENT_CONFIG} > .gclient &&
         gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
-        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
-        export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        PYTHON2_PATH=bootstrap-2@3.8.9.chromium.14_bin/python/bin \
+        PATH=${THIRD_PARTY_DIR}/depot_tools:${THIRD_PARTY_DIR}/depot_tools/${PYTHON2_PATH}:$ENV{PATH} \
+        PKG_CONFIG_PATH=${PKG_CONFIG_PATH} \
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/toolchain.custom.BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
         ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
-        export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
-        export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
+        PYTHON2_PATH=bootstrap-2@3.8.9.chromium.14_bin/python/bin \
+        PATH=${THIRD_PARTY_DIR}/depot_tools:${THIRD_PARTY_DIR}/depot_tools/${PYTHON2_PATH}:$ENV{PATH} \
+        PKG_CONFIG_PATH=${PKG_CONFIG_PATH} \
         cd ${ENGINE_SRC_PATH}/src &&
         autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
