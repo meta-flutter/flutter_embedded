@@ -43,6 +43,7 @@ ExternalProject_Add(engine
         gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
+        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@3.8.10.chromium.19_bin/python/bin/python2.7 .env &&
         source .env/bin/activate &&
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
@@ -51,6 +52,7 @@ ExternalProject_Add(engine
         ./flutter/tools/gn ${ENGINE_FLAGS} &&
         ${CMAKE_COMMAND} -E echo ${ARGS_GN_APPEND} >> ${ARGS_GN_FILE}
     BUILD_COMMAND
+        virtualenv --python ${THIRD_PARTY_DIR}/depot_tools/bootstrap-2@3.8.10.chromium.19_bin/python/bin/python2.7 .env &&
         source .env/bin/activate &&
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
