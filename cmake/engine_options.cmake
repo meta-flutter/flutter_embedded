@@ -33,7 +33,7 @@ option(ENGINE_LTO "Enable lto" ON)
 option(ENGINE_CLANG "Enable clang" ON)
 option(ENGINE_EMBEDDER_FOR_TARGET "Embedder for Target" ON)
 option(ENGINE_ENABLE_VULKAN "Enable Vulkan" OFF)
-option(ENGINE_ENABLE_FONTCONFIG "Enable Font Config" ON)
+option(ENGINE_ENABLE_FONTCONFIG "Enable Font Config" OFF)
 option(ENGINE_ENABLE_SKSHAPER "Enable skshaper" OFF)
 option(ENGINE_ENABLE_VULKAN_VALIDATION_LAYERS "Enable Vulkan Validation Layers" OFF)
 option(ENGINE_COVERAGE "Enable Code Coverage" OFF)
@@ -42,18 +42,11 @@ option(ENGINE_DISABLE_DESKTOP "Disable Desktop" ON)
 
 
 if(NOT ENGINE_PATCH_CLR)
-    set(ENGINE_PATCH_CLR
-        cd ${ENGINE_SRC_PATH}/src/third_party/icu &&
-        git checkout .
-    )
+    set(ENGINE_PATCH_CLR)
 endif()
 
 if(NOT ENGINE_PATCH_SET)
-    set(ENGINE_PATCH_SET
-        cd ${ENGINE_SRC_PATH}/src/third_party/icu &&
-        git apply ${CMAKE_SOURCE_DIR}/cmake/files/icu.patch &&
-        ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/flutter.glfw.cmake ${THIRD_PARTY_DIR}/engine/src/flutter/examples/glfw/CMakeLists.txt
-    )
+    set(ENGINE_PATCH_SET)
 endif()
 if(NOT CHANNEL)
     set(CHANNEL "beta" CACHE STRING "Choose the channel, options are: master, dev, beta, stable" FORCE)
@@ -118,12 +111,6 @@ endif()
 
 if(ENGINE_SIMULATOR)
     list(APPEND ENGINE_FLAGS --simulator)
-endif()
-
-if(ENGINE_GOMA)
-    list(APPEND ENGINE_FLAGS --goma)
-else()
-    list(APPEND ENGINE_FLAGS --no-goma)
 endif()
 
 if(ENGINE_LTO)
@@ -273,34 +260,93 @@ else()
 
     elseif(${TARGET_ARCH} STREQUAL "arm64")
 
-        set(TARGET_TRIPLE aarch64-unknown-linux-gnu)
+        set(TARGET_TRIPLE aarch64-agl-linux)
+        set(TARGET_TRIPLE_RUNTIME aarch64-agl-linux)
+
+        # if must match target arch or it will fail install
+        set(PACKAGE_ARCH aarch64)
+
+        if(NOT PKG_CONFIG_PATH)
+            set(PKG_CONFIG_PATH ${TARGET_SYSROOT}/lib/pkgconfig:${TARGET_SYSROOT}/usr/lib/pkgconfig:${TARGET_SYSROOT}/usr/share/pkgconfig)
+        endif()
+
         set(ENGINE_OUT_DIR out/linux_${ENGINE_RUNTIME_MODE}_arm64)
+        if(ENGINE_ENABLE_VULKAN)
+            set(ENGINE_OUT_DIR ${ENGINE_OUT_DIR}_vulkan)
+        endif()
+
+        # missing in stable channel
+        if(${CHANNEL} STREQUAL "stable")
+            set(LLVM_VERSION 8.0.0)
+        else()
+            set(LLVM_VERSION 11.0.0)
+        endif()
+
+        # Engine Link Flags
+    #        list(APPEND ENGINE_LIB_FLAGS -Wl,-z,notext)
+        list(APPEND ENGINE_LIB_FLAGS -nostdlib)
+        list(APPEND ENGINE_LIB_FLAGS -nostdlib++)
+        list(APPEND ENGINE_LIB_FLAGS -fuse-ld=lld)
+        list(APPEND ENGINE_LIB_FLAGS -rtlib=compiler-rt)
+        list(APPEND ENGINE_LIB_FLAGS -L${TARGET_SYSROOT}/usr/lib/aarch64-agl-linux/9.3.0)
+        string(REPLACE ";" " " ENGINE_LIB_FLAGS "${ENGINE_LIB_FLAGS}")
+
+        # Target CXX Flags
+        list(APPEND TARGET_CXX_FLAGS -I${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/include)
+        list(APPEND TARGET_CXX_FLAGS -flto)
+        list(APPEND TARGET_CXX_FLAGS -fPIC)
+        string(REPLACE ";" " " TARGET_CXX_FLAGS "${TARGET_CXX_FLAGS}")
+
+        # Target Link Flags
+        if(${CHANNEL} STREQUAL "stable")
+            list(APPEND TARGET_CXX_LINK_FLAGS -L${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/lib/clang/${LLVM_VERSION}/aarch64-unknown-linux-gnu/lib)
+            list(APPEND TARGET_CXX_LINK_FLAGS -lpthread -ldl)
+        else()
+            list(APPEND TARGET_CXX_LINK_FLAGS ${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang/lib/aarch64-unknown-linux-gnu/c++/libc++.a)
+            list(APPEND TARGET_CXX_LINK_FLAGS -nostdlib++)
+        endif()
+        list(APPEND TARGET_CXX_LINK_FLAGS -fuse-ld=lld)
+        list(APPEND TARGET_CXX_LINK_FLAGS -L${TARGET_SYSROOT}/usr/lib/aarch64-agl-linux/9.3.0)
+        string(REPLACE ";" " " TARGET_CXX_LINK_FLAGS "${TARGET_CXX_LINK_FLAGS}")
+
     elseif(${TARGET_ARCH} STREQUAL "x64")
-        set(TARGET_TRIPLE x86_64-unknown-linux-gnu)
+        set(TARGET_TRIPLE x86_64-linux-gnu)
         if(NOT PKG_CONFIG_PATH)
             set(PKG_CONFIG_PATH /usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig)
         endif()
         set(ENGINE_OUT_DIR out/linux_${ENGINE_RUNTIME_MODE}_x64)
-        set(TARGET_SYSROOT ${THIRD_PARTY_DIR}/engine/src/build/linux/debian_sid_amd64-sysroot)
+        if(ENGINE_ENABLE_VULKAN)
+            set(ENGINE_OUT_DIR ${ENGINE_OUT_DIR}_vulkan)
+        endif()
+
+        # if must match target arch or it will fail install
+        set(PACKAGE_ARCH x86_64)
+
     elseif(${TARGET_ARCH} STREQUAL "x86")
         set(TARGET_TRIPLE i386-unknown-linux-gnu)
         set(ENGINE_OUT_DIR out/linux_${ENGINE_RUNTIME_MODE}_x86)
     endif()
 
-    if(NOT ENGINE_DISABLE_DESKTOP AND NOT ENGINE_EMBEDDER_FOR_TARGET)
-        set(ENGINE_NAME libflutter_linux_gtk)
-        set(ENGINE_COPY_HEADER ${CMAKE_COMMAND} -E copy_directory ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_linux ${CMAKE_BINARY_DIR}/${CHANNEL})
-    else()
+    set(ENGINE_HEADER flutter_embedder.h)
+    if(ENGINE_DISABLE_DESKTOP AND ENGINE_EMBEDDER_FOR_TARGET)
         set(ENGINE_NAME libflutter_engine)
-        set(ENGINE_HEADER flutter_embedder.h)
-        set(ENGINE_COPY_HEADER ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/${ENGINE_HEADER} ${CMAKE_BINARY_DIR}/${CHANNEL})
+        set(ENGINE_COPY_HEADER ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/${ENGINE_HEADER} ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL})
+    else()
+        set(ENGINE_NAME libflutter_linux_gtk)
+        set(ENGINE_COPY_HEADER ${CMAKE_COMMAND} -E copy_directory ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_linux ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL})
     endif()
 
     list(APPEND ENGINE_FLAGS --target-os linux)
     list(APPEND ENGINE_FLAGS --linux-cpu ${TARGET_ARCH})
-    list(APPEND ENGINE_FLAGS --target-sysroot ${TARGET_SYSROOT})
-    list(APPEND ENGINE_FLAGS --target-toolchain ${TOOLCHAIN_DIR})
     list(APPEND ENGINE_FLAGS --target-triple ${TARGET_TRIPLE})
+
+    if(NOT ${TARGET_SYSROOT} STREQUAL "")
+        list(APPEND ENGINE_FLAGS --target-sysroot ${TARGET_SYSROOT})
+    endif()
+
+    if(NOT ${TARGET_ARCH} STREQUAL "x64")
+        list(APPEND ENGINE_FLAGS --target-toolchain ${TOOLCHAIN_DIR})
+    endif()
 
     set(TARGET_OS linux)
 
@@ -338,13 +384,15 @@ else()
     set(DOWNLOAD_MSVC_DEPS "True")
 endif()
 
-set(GCLIENT_CONFIG "solutions=[{\"managed\":False,\"name\":\"src/flutter\",\"url\":\"${ENGINE_REPO}\",\"custom_vars\":{\"download_android_deps\":${DOWNLOAD_ANDROID_DEPS},\"download_windows_deps\":${DOWNLOAD_MSVC_DEPS},}}]")
-
+set(GCLIENT_CONFIG "solutions = [{\"managed\": False,\"name\": \"src/flutter\",\"url\": \"https://github.com/flutter/engine.git\",\"deps_file\": \"DEPS\", \"custom_vars\": {\"download_android_deps\" : ${DOWNLOAD_ANDROID_DEPS}, \"download_windows_deps\" : ${DOWNLOAD_MSVC_DEPS},},},]")
 
 set(ARGS_GN_FILE ${ENGINE_SRC_PATH}/src/${ENGINE_OUT_DIR}/args.gn)
 
-set(ARGS_GN_APPEND "arm_tune = \"${TUNEABI}\"")
-
+if(${TARGET_ARCH} STREQUAL "x64")
+    set(ARGS_GN_APPEND "enable_unittests = false")
+else()
+    set(ARGS_GN_APPEND "arm_tune = \"${TUNEABI}\"")
+endif()
 
 string(REPLACE ";" " " ENGINE_FLAGS_PRETTY "${ENGINE_FLAGS}")
 message(STATUS "Engine Flags ........... ${ENGINE_FLAGS_PRETTY}")

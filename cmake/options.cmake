@@ -22,22 +22,9 @@
 # SOFTWARE.
 #
 
-option(BUILD_PLATFORM_SYSROOT "Build Platform sysroot" ON)
-option(BUILD_PLATFORM_SYSROOT_RPI "Build Raspberry Pi Sysroot" ON)
-
-option(BUILD_FLUTTER_RPI "Build RPI Flutter Shell" ON)
-option(BUILD_GLFW_FLUTTER "Build GLFW example" ON)
-option(BUILD_FLUTTER_PI "Build flutter-pi" OFF)
-option(BUILD_FLUTTER_WAYLAND "Build Wayland Flutter Shell" OFF)
-
 if(NOT TARGET_ARCH)
-    set(TARGET_ARCH "arm" CACHE STRING "Choose the target arch, options are: x64, x86, arm64, or arm." FORCE)
-    message(STATUS "TARGET_ARCH not set, defaulting to arm")
-endif()
-
-if(NOT TARGET_SYSROOT)
-    set(TARGET_SYSROOT "${CMAKE_SOURCE_DIR}/sysroot")
-    message(STATUS "TARGET_SYSROOT not set, defaulting to ${CMAKE_SOURCE_DIR}/sysroot")
+    set(TARGET_ARCH "arm64" CACHE STRING "Choose the target arch, options are: x64, x86, arm64, or arm." FORCE)
+    message(STATUS "TARGET_ARCH not set, defaulting to arm64")
 endif()
 
 if(NOT THIRD_PARTY_DIR)
@@ -45,7 +32,6 @@ if(NOT THIRD_PARTY_DIR)
 endif()
 
 if(NOT TOOLCHAIN_DIR)
-    # TODO - only tested with linux
     set(TOOLCHAIN_DIR "${THIRD_PARTY_DIR}/engine/src/buildtools/linux-x64/clang")
 endif()
 

@@ -6,12 +6,7 @@ This repo is focused on building alternative Flutter Shells for Embedded Linux.
 
 **[Note: armv6 is not supported by Google](https://github.com/flutter/flutter/issues/22380#issuecomment-629291519)**
 
-To generate DEB packages issue `make package` from your build folder.  If you built with default flags you will see these in your build directory:
-
-    libflutter_engine-debug-dev-1.0.0-Linux-armhf.deb
-    flutter-glfw-1.0.0-Linux-armhf.deb
-
-You can now select the desired channel, the default is stable.  Use this `cmake .. -DCHANNEL=beta` to swtich channels.
+You can now select the desired channel, the default is beta.  Use this `cmake .. -DCHANNEL=beta` to swtich channels.
 Master, dev, beta, and stable have all been tested building armv7 image for Raspberry Pi..
 
 flutter-pi has been added as an optional shell to build.
@@ -193,104 +188,6 @@ Extract the archive, which will give you a .img file. If on Ubuntu Bionic, doubl
     cp -r lib {flutter_embedded git clone root}/sdk/sysroot
     cp -r opt {flutter_embedded git clone root}/sdk/sysroot
     cp -r usr {flutter_embedded git clone root}/sdk/sysroot
-
-### sdk folder
-
-The sdk folder will look like this after the toolchain has built properly
-
-    ./sdk
-    |-- sysroot
-    |   |-- lib
-    |   |-- opt
-    |   `-- usr
-    `-- toolchain
-        |-- arm-linux-gnueabihf
-        |-- bin
-        |-- include
-        |-- lib
-        |-- libexec
-        `-- share
-
-### Flutter Engine Default Font for Linux
-
-    Arial.ttf
-
-Check your target using
-
-    fc-match Arial
-
-It should return    
-
-    Arial.ttf: "Arial" "Normal"
-
-If the Arial font is not present, you get this fatal error when attemping to launch Flutter
-
-    LOG: /home/joel/git/flutter_embedded/build/rpi_flutter-prefix/src/rpi_flutter/flutter/main.cc:66: Display Size: 800 x 480
-    flutter: Observatory listening on http://127.0.0.1:34949/
-    [ERROR:flutter/third_party/txt/src/minikin/FontFamily.cpp(184)] Could not get cmap table size!
-
-### Install Arial Font
-
-    sudo apt-get install ttf-mscorefonts-installer
-    sudo fc-cache
-
-### Push Native Flutter build artifacts to Target
-
-    scp -r {build folder}/target/* pi@raspberrypi.local:/home/pi
-
-### Enable Linux as a Platform in your Flutter Repo
-
-    cd <flutter git root (not this repo)>
-    git apply <flutter_embedded repo>/cmake/flutter_platform.patch
-
-Note that that Flutter repo does not have TargetPlatform.linux as part of Material design.  You have to add it by hand, or override debugDefaultTargetPlatformOverride and set it to a supported one...  There are a couple of cases that need a unique implementation for Linux.  Vibrate, etc.
-
-Apply this changelist, if not present.  https://github.com/flutter/flutter/pull/24932/files
-
-When adding in Linux support to the Dart code, start by adding "case TargetPlatform.linux:" to all switch cases found via
-
-    cd {flutter repo}
-    grep -r "case TargetPlatform.android:"
-
-### Build your Flutter Application
-
-    cd {flutter app project folder}
-    flutter build bundle
-
-*Note: You either need to override TargetPlatform prior to running the app*
-
-## Tested Flutter Examples
-
-Tested apps post Flutter Dart "linux" platfrom add
-    
-    flutter/examples/catalog * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
-    flutter/examples/flutter_gallery * key test case for platform
-    flutter/examples/flutter_view
-    flutter/examples/hello_world
-    flutter/examples/layers * Generates rendered text: "Instead run", "flutter run lib/xxx.dart"
-    flutter/examples/platform_channel
-    flutter/examples/platform_view * Android view not impl.. no-op btn
-    flutter/examples/stocks
-    flutter-desktop-embedding/example/flutter_app
-
-### Push built Flutter Application to Target
-
-    scp -r {flutter app root }/build/* pi@raspberrypi.local:/home/pi
-
-### Execute Flutter on Target
-Presuming you built your Flutter app, and pushed the build folder to your target, you can run it with this
-
-    TSLIB_CONFFILE=/etc/ts.conf TSLIB_PLUGINDIR=/home/pi/lib/ts TSLIB_CALIBFILE=/etc/pointercal LD_LIBRARY_PATH=./lib ./bin/flutter ./build/flutter_assets/
-
-*If your touch screen is not auto-detected correctly, specify the /dev/input/event[n] using the environmental variable TSLIB_TSDEVICE*
-
-This can be run from a SSH session, or directly on the device.  You should see output like this, prior to the app being rendered
-
-    LOG: /home/joel/git/flutter_embedded/build/rpi_flutter-prefix/src/rpi_flutter/flutter/main.cc:66: Display Size: 800 x 480
-    flutter: Observatory listening on http://127.0.0.1:34949/
-
-*Note: If you get unknown platform exception, you either need to override debugDefaultTargetPlatformOverride, or 
-"Enable Linux as a Platform in your Flutter Repo"*
 
 ### Raspberry Pi 7" Touch Display
 

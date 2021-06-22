@@ -26,12 +26,14 @@ include (ExternalProject)
 
 ExternalProject_Add(depot_tools
     GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    GIT_TAG master
     GIT_SHALLOW 1
     SOURCE_DIR ${DEPOT_TOOLS_DIR}
     UPDATE_COMMAND ""
-    BUILD_IN_SOURCE 0
+    BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
+    BUILD_COMMAND pwd &&
+      export DEPOT_TOOLS_UPDATE=0 &&
+      export GCLIENT_PY3=1 &&
+      ./gclient --version
     INSTALL_COMMAND ""
 )

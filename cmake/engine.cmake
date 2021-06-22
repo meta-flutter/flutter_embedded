@@ -37,9 +37,8 @@ ExternalProject_Add(engine
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
-        gclient config --spec ${GCLIENT_CONFIG} &&
-        gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} -v
-    PATCH_COMMAND ${ENGINE_PATCH_CLR} && ${ENGINE_PATCH_SET}
+        echo ${GCLIENT_CONFIG} > .gclient &&
+        gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC}
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
@@ -74,24 +73,21 @@ link_directories(${ENGINE_LIBRARIES_DIR})
 #
 # Install
 #
-if(NOT ENGINE_DISABLE_DESKTOP AND NOT ENGINE_EMBEDDER_FOR_TARGET)
-    install(DIRECTORY ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_linux DESTINATION share/flutter/engine)
+set(BUILD_DIR ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR})
+
+install(FILES ${CMAKE_BINARY_DIR}/engine.version DESTINATION share/flutter/sdk)
+install(FILES ${BUILD_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION lib)
+install(FILES ${BUILD_DIR}/${ENGINE_HEADER} DESTINATION include)
+install(FILES ${BUILD_DIR}/icudtl.dat DESTINATION share/flutter)
+
+install(DIRECTORY ${BUILD_DIR}/flutter_patched_sdk DESTINATION share/flutter/sdk FILES_MATCHING PATTERN "*")
+
+if(CMAKE_CROSSCOMPILING)
+  install(FILES ${BUILD_DIR}/gen/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
+  install(FILES ${BUILD_DIR}/clang_x64/dart DESTINATION share/flutter/sdk/clang_x64)
+  install(FILES ${BUILD_DIR}/clang_x64/gen_snapshot DESTINATION share/flutter/sdk/clang_x64)
 else()
-    install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/${ENGINE_HEADER} DESTINATION  share/flutter/engine)
-endif()
-
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/icudtl.dat DESTINATION bin)
-
-install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
-    DESTINATION lib${INSTALL_TRIPLE_SUFFIX})
-
-install(FILES 
-    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill
-    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.d
-    ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/vm_outline_strong.dill
-    DESTINATION share/flutter/engine/flutter_patched_sdk)
-
-if(${ENGINE_RUNTIME_MODE} STREQUAL "debug")
-    install(FILES ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR}/flutter_patched_sdk/platform_strong.dill.S
-    DESTINATION share/flutter/engine/flutter_patched_sdk)
+  install(FILES ${BUILD_DIR}/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
+  install(FILES ${BUILD_DIR}/dart DESTINATION share/flutter/sdk/clang_x64)
+  install(FILES ${BUILD_DIR}/gen_snapshot DESTINATION share/flutter/sdk/clang_x64)
 endif()

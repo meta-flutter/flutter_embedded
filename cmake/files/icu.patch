@@ -11,3 +11,4 @@ index fd193560..09200fb8 100644
                return U_INT64_MAX;
            } else {
                return (int64_t)scaled;
+

@@ -34,9 +34,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
 if(NOT BUILD_NUMBER)
     set(BUILD_NUMBER 0)
 endif()
-set(FLUTTER_EMBEDDED_VERSION 1.0.${BUILD_NUMBER})
+set(FLUTTER_ENGINE_VERSION 1.0.${BUILD_NUMBER})
 
-project(flutter-embedded VERSION "${FLUTTER_EMBEDDED_VERSION}" LANGUAGES CXX C)
+project(flutter-engine VERSION "${FLUTTER_ENGINE_VERSION}" LANGUAGES C)
 
 message(STATUS "Generator .............. ${CMAKE_GENERATOR}")
 message(STATUS "Build Type ............. ${CMAKE_BUILD_TYPE}")
@@ -46,15 +46,6 @@ ProcessorCount(NUM_PROC)
 
 
 include(options)
-include(sysroot)
 include(depot_tools)
 include(engine)
-
-
-if(BUILD_FLUTTER_RPI)
-    include(rpi)
-elseif(BUILD_FLUTTER_WAYLAND)
-    include(wayland)
-endif()
-
 include(packaging)
