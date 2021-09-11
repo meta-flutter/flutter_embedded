@@ -40,7 +40,10 @@ ExternalProject_Add(engine
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
         echo ${GCLIENT_CONFIG} > .gclient &&
-        gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC}
+        gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} &&
+        cd ${ENGINE_SRC_PATH}/src/third_party/dart &&
+        echo `git describe` > ${CMAKE_BINARY_DIR}/dart.tag &&
+        execute_process(COMMAND cat ${CMAKE_BINARY_DIR}/dart.tag OUTPUT_VARIABLE DART_TAG)
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
