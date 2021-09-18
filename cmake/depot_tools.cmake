@@ -26,6 +26,7 @@ include (ExternalProject)
 
 ExternalProject_Add(depot_tools
     GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    GIT_TAG main
     GIT_SHALLOW 1
     SOURCE_DIR ${DEPOT_TOOLS_DIR}
     UPDATE_COMMAND ""
