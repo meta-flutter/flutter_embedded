@@ -67,6 +67,7 @@ ExternalProject_Add(engine
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         ${ENGINE_COPY_HEADER}
+        ls -laR ${BUILD_DIR}
 )
 
 add_dependencies(engine depot_tools)
@@ -93,11 +94,11 @@ install(FILES ${BUILD_DIR}/icudtl.dat DESTINATION share/flutter)
 install(DIRECTORY ${BUILD_DIR}/flutter_patched_sdk DESTINATION share/flutter/sdk FILES_MATCHING PATTERN "*")
 
 if(CMAKE_CROSSCOMPILING)
-  install(FILES ${BUILD_DIR}/gen/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
+#  install(FILES ${BUILD_DIR}/gen/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
   install(FILES ${BUILD_DIR}/clang_x64/dart DESTINATION share/flutter/sdk/clang_x64)
   install(FILES ${BUILD_DIR}/clang_x64/gen_snapshot DESTINATION share/flutter/sdk/clang_x64)
 else()
-  install(FILES ${BUILD_DIR}/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
+#  install(FILES ${BUILD_DIR}/frontend_server.dart.snapshot DESTINATION share/flutter/sdk)
   install(FILES ${BUILD_DIR}/dart DESTINATION share/flutter/sdk/clang_x64)
   install(FILES ${BUILD_DIR}/gen_snapshot DESTINATION share/flutter/sdk/clang_x64)
 endif()
