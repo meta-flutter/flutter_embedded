@@ -66,7 +66,7 @@ ExternalProject_Add(engine
         cd ${ENGINE_SRC_PATH}/src &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
-        ${ENGINE_COPY_HEADER}
+        ${ENGINE_COPY_HEADER} &&
         ls -laR ${BUILD_DIR}
 )
 
