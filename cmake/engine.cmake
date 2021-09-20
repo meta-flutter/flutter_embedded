@@ -27,6 +27,7 @@ if(NOT ENGINE_REPO)
 endif()
 MESSAGE(STATUS "Engine Repo ............ ${ENGINE_REPO}")
 
+find_program(GIT git REQUIRED)
 
 set(ENGINE_SRC_PATH ${THIRD_PARTY_DIR}/engine)
 
@@ -42,8 +43,7 @@ ExternalProject_Add(engine
         echo ${GCLIENT_CONFIG} > .gclient &&
         gclient sync --no-history --revision ${FLUTTER_ENGINE_SHA} -R -D -j ${NUM_PROC} &&
         cd ${ENGINE_SRC_PATH}/src/third_party/dart &&
-        echo `git describe` > ${CMAKE_BINARY_DIR}/dart.tag &&
-        execute_process(COMMAND cat ${CMAKE_BINARY_DIR}/dart.tag OUTPUT_VARIABLE DART_TAG)
+        git describe > ${CMAKE_BINARY_DIR}/dart.version
     BUILD_IN_SOURCE 0
     CONFIGURE_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
@@ -85,6 +85,7 @@ link_directories(${ENGINE_LIBRARIES_DIR})
 set(BUILD_DIR ${THIRD_PARTY_DIR}/engine/src/${ENGINE_OUT_DIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/engine.version DESTINATION share/flutter/sdk)
+install(FILES ${CMAKE_BINARY_DIR}/dart.version DESTINATION share/flutter/sdk)
 install(FILES ${BUILD_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION lib)
 install(FILES ${BUILD_DIR}/${ENGINE_HEADER} DESTINATION include)
 install(FILES ${BUILD_DIR}/icudtl.dat DESTINATION share/flutter)
