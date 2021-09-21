@@ -22,14 +22,11 @@ jobs:
       - name: Flutter Channel Rolled
         if: github.event.action == 'channel_roll'
         run: |
-          ARCH=x86_64
-          OS=linux
-          RUNTIME=gcc
+          TRIPLET=x86_64-linux-gcc
           mkdir -p ${{github.workspace}}/build/debug
           pushd ${{github.workspace}}/build/debug
-          cmake .. -DTARGET_TRIPLE=${ARCH}-${OS}-${RUNTIME} -DTARGET_ARCH=x64
           echo "Create Debug Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -44,7 +41,7 @@ jobs:
           mkdir -p ${{github.workspace}}/build/release
           pushd ${{github.workspace}}/build/release
           echo "Create Release Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -59,7 +56,7 @@ jobs:
           mkdir -p ${{github.workspace}}/build/profile
           pushd ${{github.workspace}}/build/profile
           echo "Create Profile Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -70,18 +67,14 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
 
       - name: Build
         run: |
-          ARCH=x86_64
-          OS=linux
-          RUNTIME=gcc
+          TRIPLET=x86_64-linux-gcc
           mkdir -p ${{github.workspace}}/build/debug
           pushd ${{github.workspace}}/build/debug
-          cmake .. -DTARGET_TRIPLE=${ARCH}-${OS}-${RUNTIME} -DTARGET_ARCH=x64
           echo "Create Debug Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -96,7 +89,7 @@ jobs:
           mkdir -p ${{github.workspace}}/build/release
           pushd ${{github.workspace}}/build/release
           echo "Create Release Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -111,7 +104,7 @@ jobs:
           mkdir -p ${{github.workspace}}/build/profile
           pushd ${{github.workspace}}/build/profile
           echo "Create Profile Packages"
-          cmake .. -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -122,12 +115,11 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
 
       - name: Runtime Debug artifacts TGZ
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug
+          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.tgz
           path: |
             build/debug/*.tar.gz
             build/debug/*.tar.gz-MD5SUMS.txt
@@ -135,7 +127,7 @@ jobs:
       - name: Runtime Release artifacts TGZ
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release
+          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.tgz
           path: |
             build/release/*.tar.gz
             build/release/*.tar.gz-MD5SUMS.txt
@@ -143,7 +135,7 @@ jobs:
       - name: Runtime Profile artifacts TGZ
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile
+          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.tgz
           path: |
             build/profile/*.tar.gz
             build/profile/*.tar.gz-MD5SUMS.txt
@@ -151,7 +143,7 @@ jobs:
       - name: Runtime Debug artifacts Debian
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug
+          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.deb
           path: |
             build/debug/*.deb
             build/debug/*.deb-MD5SUMS.txt
@@ -159,7 +151,7 @@ jobs:
       - name: Runtime Release artifacts Debian
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release
+          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.deb
           path: |
             build/release/*.deb
             build/release/*.deb-MD5SUMS.txt
@@ -167,7 +159,7 @@ jobs:
       - name: Runtime Profile artifacts Debian
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile
+          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.deb
           path: |
             build/profile/*.deb
             build/profile/*.deb-MD5SUMS.txt
@@ -175,7 +167,7 @@ jobs:
       - name: Runtime Debug artifacts RPM
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug
+          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.rpm
           path: |
             build/debug/*.rpm
             build/debug/*.rpm-MD5SUMS.txt
@@ -183,7 +175,7 @@ jobs:
       - name: Runtime Release artifacts RPM
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release
+          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.rpm
           path: |
             build/release/*.rpm
             build/release/*.rpm-MD5SUMS.txt
@@ -191,7 +183,7 @@ jobs:
       - name: Runtime Profile artifacts RPM
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile
+          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.rpm
           path: |
             build/profile/*.rpm
             build/profile/*.rpm-MD5SUMS.txt
