@@ -62,12 +62,12 @@ ExternalProject_Add(engine
         cd ${ENGINE_SRC_PATH}/src &&
         autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
+        echo ${BUILD_DIR} &&
         ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         cd ${ENGINE_SRC_PATH}/src &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/icudtl.dat ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
         ${CMAKE_COMMAND} -E copy ${ENGINE_OUT_DIR}/${ENGINE_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_BINARY_DIR}/${ENGINE_RUNTIME_MODE}/${CHANNEL} &&
-        ${ENGINE_COPY_HEADER} &&
-        ls -laR ${BUILD_DIR}
+        ${ENGINE_COPY_HEADER}
 )
 
 add_dependencies(engine depot_tools)
