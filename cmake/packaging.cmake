@@ -9,8 +9,4 @@ set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Joel Winarske")
 set(CPACK_DEBIAN_COMPRESSION_TYPE "lzma")
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    set(CPACK_STRIP_FILES libflutter_engine.so)
-endif()
-
 include(CPack)
