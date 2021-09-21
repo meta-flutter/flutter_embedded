@@ -27,6 +27,7 @@ jobs:
           pushd ${{github.workspace}}/build/debug
           echo "Create Debug Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -42,6 +43,7 @@ jobs:
           pushd ${{github.workspace}}/build/release
           echo "Create Release Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -57,6 +59,7 @@ jobs:
           pushd ${{github.workspace}}/build/profile
           echo "Create Profile Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -75,6 +78,7 @@ jobs:
           pushd ${{github.workspace}}/build/debug
           echo "Create Debug Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -90,6 +94,7 @@ jobs:
           pushd ${{github.workspace}}/build/release
           echo "Create Release Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
@@ -105,6 +110,7 @@ jobs:
           pushd ${{github.workspace}}/build/profile
           echo "Create Profile Packages"
           cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
