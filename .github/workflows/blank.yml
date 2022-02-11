@@ -1,4 +1,4 @@
-name: CI
+name: engine_package_build
 
 on:
   push:
@@ -10,23 +10,42 @@ on:
 jobs:
   x86_64-linux-gcc:
     runs-on: [self-hosted, linux]
+    
+    container:
+      image: ghcr.io/meta-flutter/ubuntu-20-dev:main
+      options:
+        --user 1018
+        --storage-opt overlay.mount_program=/usr/bin/fuse-overlayfs
+        --storage-opt overlay.mountopt=nodev,metacopy=on,noxattrs=1
+        -v /mnt/raid10/github-ci/artifacts/flutter-embedded:/home/dev/artifacts:Z
+        
     steps:
 
       - name: Event Information
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
 
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
+      - name: Set Ownership
+        run: |
+          chown -R dev:dev $HOME .
+          mkdir -p /home/dev/artifacts/debug
+          mkdir -p /home/dev/artifacts/release
+          mkdir -p /home/dev/artifacts/profile
+          
+      - uses: actions/checkout@v2
+      
       - name: Flutter Channel Rolled
         if: github.event.action == 'channel_roll'
         run: |
           TRIPLET=x86_64-linux-gcc
-          mkdir -p ${{github.workspace}}/build/debug
-          pushd ${{github.workspace}}/build/debug
+          mkdir -p _ci/debug && cd _ci/debug
           echo "Create Debug Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=debug
           echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
@@ -38,11 +57,15 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
-          mkdir -p ${{github.workspace}}/build/release
-          pushd ${{github.workspace}}/build/release
+          cd ..
+          mkdir release && cd release
           echo "Create Release Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/release \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=release
           echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
@@ -54,11 +77,15 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
-          mkdir -p ${{github.workspace}}/build/profile
-          pushd ${{github.workspace}}/build/profile
+          cd ..
+          mkdir profile && cd profile
           echo "Create Profile Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/profile \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=profile
           echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
@@ -74,10 +101,14 @@ jobs:
       - name: Build
         run: |
           TRIPLET=x86_64-linux-gcc
-          mkdir -p ${{github.workspace}}/build/debug
-          pushd ${{github.workspace}}/build/debug
+          mkdir -p _ci/debug && cd _ci/debug
           echo "Create Debug Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=debug
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=debug
           echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
@@ -89,11 +120,15 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
-          mkdir -p ${{github.workspace}}/build/release
-          pushd ${{github.workspace}}/build/release
+          cd ..
+          mkdir release && cd release
           echo "Create Release Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=release
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/release \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=release
           echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
@@ -105,11 +140,15 @@ jobs:
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
           echo $PACKAGE_FILE
           md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          popd
-          mkdir -p ${{github.workspace}}/build/profile
-          pushd ${{github.workspace}}/build/profile
+          cd ..
+          mkdir profile && cd profile
           echo "Create Profile Packages"
-          cmake ../.. -DTARGET_TRIPLE=${TRIPLET} -DTARGET_ARCH=x64 -DCHANNEL=beta -DENGINE_RUNTIME_MODE=profile
+          cmake ../.. \
+            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/profile \
+            -DTARGET_TRIPLE=${TRIPLET} \
+            -DTARGET_ARCH=x64 \
+            -DCHANNEL=beta \
+            -DENGINE_RUNTIME_MODE=profile
           echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
           PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`

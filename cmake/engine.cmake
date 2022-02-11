@@ -37,7 +37,7 @@ ExternalProject_Add(engine
     DOWNLOAD_COMMAND
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         virtualenv --python /usr/bin/python2.7 .env &&
-        source .env/bin/activate &&
+        . .env/bin/activate &&
         ${CMAKE_COMMAND} -E make_directory ${ENGINE_SRC_PATH} &&
         cd ${ENGINE_SRC_PATH} &&
         echo ${GCLIENT_CONFIG} > .gclient &&
@@ -49,7 +49,7 @@ ExternalProject_Add(engine
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
         virtualenv --python /usr/bin/python2.7 .env &&
-        source .env/bin/activate &&
+        . .env/bin/activate &&
         ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/toolchain.custom.BUILD.gn ${THIRD_PARTY_DIR}/engine/src/build/toolchain/custom/BUILD.gn &&
         cd ${ENGINE_SRC_PATH}/src &&
         ./flutter/tools/gn ${ENGINE_FLAGS} &&
@@ -58,7 +58,7 @@ ExternalProject_Add(engine
         export PATH=${THIRD_PARTY_DIR}/depot_tools:$ENV{PATH} &&
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH} &&
         virtualenv --python /usr/bin/python2.7 .env &&
-        source .env/bin/activate &&
+        . .env/bin/activate &&
         cd ${ENGINE_SRC_PATH}/src &&
         autoninja -C ${ENGINE_OUT_DIR}
     INSTALL_COMMAND
