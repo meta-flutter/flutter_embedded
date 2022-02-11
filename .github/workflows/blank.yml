@@ -38,7 +38,7 @@ jobs:
         if: github.event.action == 'channel_roll'
         run: |
           TRIPLET=x86_64-linux-gcc
-          mkdir -p _ci/debug && cd _ci/debug
+          mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
             -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
@@ -101,7 +101,7 @@ jobs:
       - name: Build
         run: |
           TRIPLET=x86_64-linux-gcc
-          mkdir -p _ci/debug && cd _ci/debug
+          mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
             -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
