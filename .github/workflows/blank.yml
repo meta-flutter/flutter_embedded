@@ -15,9 +15,6 @@ jobs:
       image: ghcr.io/meta-flutter/ubuntu-20-dev:main
       options:
         --user 1018
-        --storage-opt overlay.mount_program=/usr/bin/fuse-overlayfs
-        --storage-opt overlay.mountopt=nodev,metacopy=on,noxattrs=1
-        -v /mnt/raid10/github-ci/artifacts/flutter-embedded:/home/dev/artifacts:Z
         
     steps:
 
@@ -28,9 +25,6 @@ jobs:
       - name: Set Ownership
         run: |
           chown -R dev:dev $HOME .
-          mkdir -p /home/dev/artifacts/debug
-          mkdir -p /home/dev/artifacts/release
-          mkdir -p /home/dev/artifacts/profile
           
       - uses: actions/checkout@v2
       
@@ -41,7 +35,6 @@ jobs:
           mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
@@ -61,7 +54,6 @@ jobs:
           mkdir release && cd release
           echo "Create Release Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/release \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
@@ -81,7 +73,6 @@ jobs:
           mkdir profile && cd profile
           echo "Create Profile Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/profile \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
@@ -104,7 +95,6 @@ jobs:
           mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/debug \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
@@ -124,7 +114,6 @@ jobs:
           mkdir release && cd release
           echo "Create Release Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/release \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
@@ -144,7 +133,6 @@ jobs:
           mkdir profile && cd profile
           echo "Create Profile Packages"
           cmake ../.. \
-            -DCMAKE_STAGING_PREFIX=/home/dev/artifacts/profile \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=beta \
