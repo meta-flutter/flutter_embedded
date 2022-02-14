@@ -9,205 +9,22 @@ on:
   workflow_dispatch:
   
 jobs:
-  x86_64-linux-gcc:
+  build_engine_arm:
+    name: 'Build and deploy engine for linux arm (32-bit).'
+
     runs-on: [self-hosted, linux]
        
     steps:
       - name: Event Information
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
-          
-      - uses: actions/checkout@v2
       
-      - name: Flutter Channel Rolled
-        if: github.event.action == 'channel_roll'
-        run: |
-          TRIPLET=x86_64-linux-gcc
-          mkdir -p build/debug && cd build/debug
-          echo "Create Debug Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=debug
-          echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          cd ..
-          mkdir release && cd release
-          echo "Create Release Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=release
-          echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          cd ..
-          mkdir profile && cd profile
-          echo "Create Profile Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=profile
-          echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-
-      - name: Build
-        run: |
-          TRIPLET=x86_64-linux-gcc
-          mkdir -p build/debug && cd build/debug
-          echo "Create Debug Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=debug
-          echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          cd ..
-          mkdir release && cd release
-          echo "Create Release Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=release
-          echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          cd ..
-          mkdir profile && cd profile
-          echo "Create Profile Packages"
-          cmake ../.. \
-            -DTARGET_TRIPLE=${TRIPLET} \
-            -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
-            -DENGINE_RUNTIME_MODE=profile
-          echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
-          make package -j
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.gz -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.deb -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-          PACKAGE_FILE=`find -iname flutter-engine-*-debug-*-Linux-*.rpm -not -path "./_CPack_Packages/*"`
-          echo $PACKAGE_FILE
-          md5sum $PACKAGE_FILE > ${PACKAGE_FILE}-MD5SUMS.txt
-
-      - name: Runtime Debug artifacts TGZ
-        uses: actions/upload-artifact@v2
+      - name: Build & Configure engine
+        uses: actions/build-engine
         with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.tgz
-          path: |
-            build/debug/*.tar.gz
-            build/debug/*.tar.gz-MD5SUMS.txt
+          ref: ab46186b246f5a36bd1f3f295d14a43abb1e2f38
+          is-host: false
+          runtime-mode: debug
+          os: linux
+          cpu: arm
 
-      - name: Runtime Release artifacts TGZ
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.tgz
-          path: |
-            build/release/*.tar.gz
-            build/release/*.tar.gz-MD5SUMS.txt
-
-      - name: Runtime Profile artifacts TGZ
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.tgz
-          path: |
-            build/profile/*.tar.gz
-            build/profile/*.tar.gz-MD5SUMS.txt
-
-      - name: Runtime Debug artifacts Debian
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.deb
-          path: |
-            build/debug/*.deb
-            build/debug/*.deb-MD5SUMS.txt
-
-      - name: Runtime Release artifacts Debian
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.deb
-          path: |
-            build/release/*.deb
-            build/release/*.deb-MD5SUMS.txt
-
-      - name: Runtime Profile artifacts Debian
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.deb
-          path: |
-            build/profile/*.deb
-            build/profile/*.deb-MD5SUMS.txt
-
-      - name: Runtime Debug artifacts RPM
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_DEBUG }}.x86_64-linux-gcc.debug.rpm
-          path: |
-            build/debug/*.rpm
-            build/debug/*.rpm-MD5SUMS.txt
-
-      - name: Runtime Release artifacts RPM
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_RELEASE }}.x86_64-linux-gcc.release.rpm
-          path: |
-            build/release/*.rpm
-            build/release/*.rpm-MD5SUMS.txt
-
-      - name: Runtime Profile artifacts RPM
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ENGINE_VERSION_PROFILE }}.x86_64-linux-gcc.profile.rpm
-          path: |
-            build/profile/*.rpm
-            build/profile/*.rpm-MD5SUMS.txt

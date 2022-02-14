@@ -1,0 +1,104 @@
+name: 'build flutter engine'
+description: 'configure and build the flutter engine'
+inputs:
+  ref:
+    description: 'The ref (commit hash, branch) of the engine repo for which the engine should be built.'
+    required: true
+  repository:
+    description: 'The engine repository that should be built. Defaults to the official flutter engine repo.'
+    required: false
+    default: https://github.com/flutter/engine.git
+  runtime-mode:
+    description: 'The value of the `--runtime-mode` parameter passed to `flutter/tools/gn`. Can be one of debug, profile, release, jit_release.'
+    required: false
+    default: 'debug'
+  is-host:
+    description: 'If this is true, no --$os-cpu=$cpu arg is passed to `flutter/tools/gn` and the flutter engine will be built for the host system instead.'
+    required: false
+    default: true
+  os:
+    description: 'The `$os` part of the `--$os-cpu=$cpu` arg passed to `flutter/tools/gn`. Can be one of android, ios, mac, linux, fuchsia, windows'
+    required: false
+    default: 'linux'
+  cpu:
+    description: 'The `$cpu` part of the `--$os-cpu=$cpu` arg passed to `flutter/tools/gn`. Can be one of arm, arm64, x64, x86 (depending on OS)'
+    required: false
+    default: 'arm'
+  additional-gn-args:
+    description: 'Additional arguments passed to flutter/tools/gn.'
+    required: false
+
+runs:
+  using: "composite"
+  env:
+    DEPOT_TOOLS_UPDATE: 0
+    GCLIENT_PY3: 1
+  steps:
+    - name: Clone depot tools
+      uses: actions/checkout@v2.4.0
+      with:
+        repository: https://chromium.googlesource.com/chromium/tools/depot_tools.git
+        ref: main
+        path: 'depot_tools'
+    - name: Setup depot tools
+      run: |
+        echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
+        gclient --version
+    - name: Bootstrap engine environment
+      run: |
+        mkdir engine
+        cd engine
+        echo 'solutions = \
+          [{ \
+            "managed": False, \
+            "name": "src/flutter", \
+            "url": "${{ inputs.repository }}", \
+            "deps_file": "DEPS", \
+            "custom_vars":{ \
+              "download_linux_deps":True \
+            }, \
+          },]' > .gclient
+    - name: Install engine sources
+      run: |
+        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j ${nproc}
+    
+    - name: Fetch arm sysroot
+      if: ${{ inputs.cpu == 'arm' }}
+      run: |
+        ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
+    
+    - name: Configure engine (host)
+      if: ${{ inputs.is-host }}
+      run: |
+        ./src/flutter/tools/gn \
+          --runtime-mode ${{ inputs.runtime-mode }} \
+          ${{ inputs.additional-gn-args }}
+    
+    - name: Build engine (host)
+      if: ${{ inputs.is-host }}
+      run: |
+        ninja -C $GITHUB_WORKSPACE/engine/src/out/host_${{ inputs.runtime-mode }}
+
+    - name: Configure engine (cross, not linux armhf)
+      if: ${{ !inputs.is-host && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
+      run: |
+        ./src/flutter/tools/gn \
+          --runtime-mode ${{ inputs.runtime-mode }} \
+          --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
+          ${{ inputs.additional-gn-args }}
+
+    - name: Configure engine (cross, linux armhf)
+      if: ${{ !inputs.is-host && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
+      run: |
+        ./src/flutter/tools/gn \
+          --runtime-mode ${{ inputs.runtime-mode }} \
+          --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
+          --target-sysroot $GITHUB_WORKSPACE/engine/src/build/linux/debian_sid_arm-sysroot \
+          --target-toolchain $GITHUB_WORKSPACE/engine/src/buildtools/linux-x64/clang \
+          --target-triple armv7-linux-gnueabihf \
+          ${{ inputs.additional-gn-args }}
+
+    - name: Build engine (cross)
+      if: ${{ !inputs.is-host }}
+      run: |
+        ninja -C $GITHUB_WORKSPACE/engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
