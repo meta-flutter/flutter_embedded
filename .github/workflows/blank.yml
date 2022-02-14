@@ -16,10 +16,6 @@ jobs:
       - name: Event Information
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
-
-      - name: Set Ownership
-        run: |
-          chown -R dev:dev $HOME .
           
       - uses: actions/checkout@v2
       
