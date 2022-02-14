@@ -11,14 +11,8 @@ on:
 jobs:
   x86_64-linux-gcc:
     runs-on: [self-hosted, linux]
-    
-    container:
-      image: ghcr.io/meta-flutter/ubuntu-20-dev:main
-      options:
-        --user 1018
-        
+       
     steps:
-
       - name: Event Information
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
