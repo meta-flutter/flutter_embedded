@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [ main, ci ]
   repository_dispatch:
-
+  workflow_dispatch:
+  
 jobs:
   x86_64-linux-gcc:
     runs-on: [self-hosted, linux]
