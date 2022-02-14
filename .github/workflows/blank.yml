@@ -19,8 +19,10 @@ jobs:
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
       
+      - uses: actions/checkout@v1
+      
       - name: Build & Configure engine
-        uses: actions/build-engine@ci
+        uses: ./.github/actions/build-engine
         with:
           ref: ab46186b246f5a36bd1f3f295d14a43abb1e2f38
           is-host: false
