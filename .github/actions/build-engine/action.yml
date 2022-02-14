@@ -27,12 +27,8 @@ inputs:
   additional-gn-args:
     description: 'Additional arguments passed to flutter/tools/gn.'
     required: false
-
 runs:
   using: "composite"
-  env:
-    DEPOT_TOOLS_UPDATE: 0
-    GCLIENT_PY3: 1
   steps:
     - name: Clone depot tools
       uses: actions/checkout@v2.4.0
@@ -43,6 +39,8 @@ runs:
     - name: Setup depot tools
       run: |
         echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
+        echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
+        echo GCLIENT_PY3=1 >> $GITHUB_ENV
         gclient --version
     - name: Bootstrap engine environment
       run: |
