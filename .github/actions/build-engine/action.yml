@@ -78,7 +78,7 @@ runs:
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
           ${{ inputs.additional-gn-args }}
-    
+
     - name: Build engine (host)
       if: ${{ inputs.is-host == 'true' }}
       shell: bash
@@ -107,8 +107,8 @@ runs:
           --runtime-mode ${{ inputs.runtime-mode }} \
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
-          --target-sysroot $GITHUB_WORKSPACE/engine/src/build/linux/debian_sid_arm-sysroot \
-          --target-toolchain $GITHUB_WORKSPACE/engine/src/buildtools/linux-x64/clang \
+          --target-sysroot $GITHUB_WORKSPACE/../engine/src/build/linux/debian_sid_arm-sysroot \
+          --target-toolchain $GITHUB_WORKSPACE/../engine/src/buildtools/linux-x64/clang \
           --target-triple armv7-linux-gnueabihf \
           --arm-float-abi hard \
           ${{ inputs.additional-gn-args }}
