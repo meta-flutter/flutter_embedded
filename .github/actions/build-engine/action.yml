@@ -63,7 +63,7 @@ runs:
     - name: Install engine sources
       shell: bash
       run: |
-        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j ${nproc}
+        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
     
     - name: Fetch arm sysroot
       if: ${{ inputs.cpu == 'arm' }}
