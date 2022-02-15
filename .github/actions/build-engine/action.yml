@@ -31,45 +31,49 @@ runs:
   using: "composite"
   steps:
     - name: Clone depot tools
+      if: 
       shell: bash
       run: |
         git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
+        
     - name: Setup environment variables
       shell: bash
       run: |
         echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
         echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
+        echo RUNNER_PERSISTENT=$GITHUB_WORKSPACE/..
         echo $PATH
+        
     - name: Setup gclient
       shell: bash
       run: |
         gclient --version
+        
     - name: Bootstrap engine environment
       shell: bash
       run: |
-        mkdir engine
-        cd engine
+        mkdir -p $RUNNER_PERSISTENT/engine
+        cd $RUNNER_PERSISTENT/engine
         echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > .gclient
     
     - name: Install engine sources
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
-        pwd
         gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
     
     - name: Fetch arm sysroot
       if: ${{ inputs.cpu == 'arm' }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
     
     - name: Configure engine (host)
       if: ${{ inputs.is-host }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
@@ -78,14 +82,14 @@ runs:
     - name: Build engine (host)
       if: ${{ inputs.is-host }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ninja -C $GITHUB_WORKSPACE/engine/src/out/host_${{ inputs.runtime-mode }}
 
     - name: Configure engine (cross, not linux armhf)
       if: ${{ !inputs.is-host && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
@@ -95,7 +99,7 @@ runs:
     - name: Configure engine (cross, linux armhf)
       if: ${{ !inputs.is-host && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
@@ -108,6 +112,6 @@ runs:
     - name: Build engine (cross)
       if: ${{ !inputs.is-host }}
       shell: bash
-      working-directory: engine
+      working-directory: ../engine
       run: |
         ninja -C $GITHUB_WORKSPACE/engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
