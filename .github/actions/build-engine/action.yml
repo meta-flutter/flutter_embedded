@@ -83,7 +83,7 @@ runs:
       shell: bash
       working-directory: ../engine
       run: |
-        ninja -C $GITHUB_WORKSPACE/engine/src/out/host_${{ inputs.runtime-mode }}
+        ninja -C $GITHUB_WORKSPACE/../engine/src/out/host_${{ inputs.runtime-mode }}
 
     - name: Configure engine (cross, not linux armhf)
       if: ${{ !inputs.is-host && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
@@ -113,4 +113,4 @@ runs:
       shell: bash
       working-directory: ../engine
       run: |
-        ninja -C $GITHUB_WORKSPACE/engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
+        ninja -C $GITHUB_WORKSPACE/../engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
