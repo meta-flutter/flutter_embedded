@@ -50,16 +50,7 @@ runs:
       run: |
         mkdir engine
         cd engine
-        echo 'solutions = \
-          [{ \
-            "managed": False, \
-            "name": "src/flutter", \
-            "url": "${{ inputs.repository }}", \
-            "deps_file": "DEPS", \
-            "custom_vars":{ \
-              "download_linux_deps":True \
-            }, \
-          },]' > .gclient
+        echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > .gclient
     - name: Install engine sources
       shell: bash
       run: |
