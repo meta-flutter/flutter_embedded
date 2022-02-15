@@ -34,13 +34,16 @@ runs:
       shell: bash
       run: |
         git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
-    - name: Setup depot tools
+    - name: Setup environment variables
       shell: bash
       run: |
         echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
         echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
         echo $PATH
+    - name: Setup gclient
+      shell: bash
+      run: |
         gclient --version
     - name: Bootstrap engine environment
       shell: bash
