@@ -102,6 +102,7 @@ runs:
       shell: bash
       working-directory: ../engine
       run: |
+        PKG_CONFIG_PATH=$GITHUB_WORKSPACE/engine/src/build/linux/debian_sid_arm-sysroot/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig \
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
           --target-os ${{ inputs.os }} \
