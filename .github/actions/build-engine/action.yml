@@ -54,6 +54,7 @@ runs:
     
     - name: Install engine sources
       shell: bash
+      working-directory: engine
       run: |
         pwd
         gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
