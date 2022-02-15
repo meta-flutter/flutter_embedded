@@ -93,6 +93,7 @@ runs:
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
+          --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
           ${{ inputs.additional-gn-args }}
 
@@ -103,10 +104,12 @@ runs:
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
+          --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
           --target-sysroot $GITHUB_WORKSPACE/engine/src/build/linux/debian_sid_arm-sysroot \
           --target-toolchain $GITHUB_WORKSPACE/engine/src/buildtools/linux-x64/clang \
           --target-triple armv7-linux-gnueabihf \
+          --arm-float-abi hard \
           ${{ inputs.additional-gn-args }}
 
     - name: Build engine (cross)
