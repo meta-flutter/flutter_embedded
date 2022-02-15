@@ -43,6 +43,7 @@ runs:
         echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
         echo $PATH
+        echo is-host: ${{ inputs.is-host }}
         
     - name: Setup gclient
       shell: bash
@@ -70,7 +71,7 @@ runs:
         ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
     
     - name: Configure engine (host)
-      if: ${{ inputs.is-host }}
+      if: ${{ inputs.is-host == true }}
       shell: bash
       working-directory: ../engine
       run: |
@@ -79,14 +80,14 @@ runs:
           ${{ inputs.additional-gn-args }}
     
     - name: Build engine (host)
-      if: ${{ inputs.is-host }}
+      if: ${{ inputs.is-host == true }}
       shell: bash
       working-directory: ../engine
       run: |
         ninja -C $GITHUB_WORKSPACE/../engine/src/out/host_${{ inputs.runtime-mode }}
 
     - name: Configure engine (cross, not linux armhf)
-      if: ${{ !inputs.is-host && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
+      if: ${{ inputs.is-host == false && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
       working-directory: ../engine
       run: |
@@ -96,7 +97,7 @@ runs:
           ${{ inputs.additional-gn-args }}
 
     - name: Configure engine (cross, linux armhf)
-      if: ${{ !inputs.is-host && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
+      if: ${{ inputs.is-host == false && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
       working-directory: ../engine
       run: |
@@ -109,7 +110,7 @@ runs:
           ${{ inputs.additional-gn-args }}
 
     - name: Build engine (cross)
-      if: ${{ !inputs.is-host }}
+      if: ${{ inputs.is-host == false }}
       shell: bash
       working-directory: ../engine
       run: |
