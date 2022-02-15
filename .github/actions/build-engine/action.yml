@@ -51,9 +51,11 @@ runs:
         mkdir engine
         cd engine
         echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > .gclient
+    
     - name: Install engine sources
       shell: bash
       run: |
+        pwd
         gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
     
     - name: Fetch arm sysroot
