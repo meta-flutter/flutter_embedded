@@ -31,11 +31,9 @@ runs:
   using: "composite"
   steps:
     - name: Clone depot tools
-      uses: actions/checkout@v2.4.0
-      with:
-        repository: https://chromium.googlesource.com/chromium/tools/depot_tools.git
-        ref: main
-        path: 'depot_tools'
+      shell: bash
+      run: |
+        git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
     - name: Setup depot tools
       shell: bash
       run: |
