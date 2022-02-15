@@ -29,4 +29,5 @@ jobs:
           runtime-mode: debug
           os: linux
           cpu: arm
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples'
 
