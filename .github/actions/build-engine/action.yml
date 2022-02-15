@@ -40,6 +40,7 @@ runs:
         echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
         echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
+        echo $PATH
         gclient --version
     - name: Bootstrap engine environment
       shell: bash
