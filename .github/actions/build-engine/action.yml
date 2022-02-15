@@ -42,7 +42,6 @@ runs:
         echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
         echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
-        echo RUNNER_PERSISTENT=$GITHUB_WORKSPACE/..
         echo $PATH
         
     - name: Setup gclient
@@ -52,10 +51,10 @@ runs:
         
     - name: Bootstrap engine environment
       shell: bash
+      working-directory: ..
       run: |
-        mkdir -p $RUNNER_PERSISTENT/engine
-        cd $RUNNER_PERSISTENT/engine
-        echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > .gclient
+        mkdir -p engine
+        echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > engine/.gclient
     
     - name: Install engine sources
       shell: bash
