@@ -37,7 +37,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=debug
           echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
@@ -56,7 +56,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=release
           echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
@@ -75,7 +75,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=profile
           echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
@@ -97,7 +97,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=debug
           echo "ENGINE_VERSION_DEBUG=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
@@ -116,7 +116,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=release
           echo "ENGINE_VERSION_RELEASE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
@@ -135,7 +135,7 @@ jobs:
           cmake ../.. \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
-            -DCHANNEL=beta \
+            -DCHANNEL=stable \
             -DENGINE_RUNTIME_MODE=profile
           echo "ENGINE_VERSION_PROFILE=$(cat engine.version | cut -c1-10)" >> $GITHUB_ENV
           make package -j
