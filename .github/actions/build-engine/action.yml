@@ -30,16 +30,23 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check depot tools already in path
+      id: depot-tools-in-path
+      shell: bash
+      run: |
+        (which gclient && echo '::set-output name=found::true') || echo '::set-output name=found::false'
+      
     - name: Clone depot tools
+      if: ${{ steps.depot-tools-in-path.outputs.found == 'false' }}
       shell: bash
       run: |
         git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
+        echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
         
     - name: Setup environment variables
       shell: bash
       run: |
-        echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
-        echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
+        # echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
         echo GCLIENT_PY3=1 >> $GITHUB_ENV
         echo $PATH
         echo is-host: ${{ inputs.is-host }}
