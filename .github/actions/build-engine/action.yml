@@ -31,7 +31,6 @@ runs:
   using: "composite"
   steps:
     - name: Clone depot tools
-      if: 
       shell: bash
       run: |
         git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
@@ -69,6 +68,11 @@ runs:
       run: |
         git apply $GITHUB_WORKSPACE/0001-fix-armv7-build.patch
     
+    - name: Show git status
+      shell: bash
+      working-directory: ../engine/src
+      run: git status
+
     - name: Fetch arm sysroot
       if: ${{ inputs.cpu == 'arm' }}
       shell: bash
