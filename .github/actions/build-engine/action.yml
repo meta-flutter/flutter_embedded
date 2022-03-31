@@ -62,6 +62,12 @@ runs:
       working-directory: ../engine
       run: |
         gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
+
+    - name: Apply patch "Fix armv7 build"
+      shell: bash
+      working-directory: ../engine/src
+      run: |
+        git apply $GITHUB_WORKSPACE/0001-fix-armv7-build.patch
     
     - name: Fetch arm sysroot
       if: ${{ inputs.cpu == 'arm' }}

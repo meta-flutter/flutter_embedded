@@ -1,0 +1,154 @@
+From 90b4380691bca6da12ed8803566c85cde4b2742e Mon Sep 17 00:00:00 2001
+From: Hannes Winkler <hanneswinkler2000@web.de>
+Date: Wed, 11 Aug 2021 02:21:25 +0200
+Subject: [PATCH] fix armv7 build
+
+---
+ build/config/compiler/BUILD.gn | 74 +++++++++++++++++++++++-----------
+ build/config/sysroot.gni       |  7 +++-
+ build/toolchain/linux/BUILD.gn | 21 ++++++++++
+ 3 files changed, 77 insertions(+), 25 deletions(-)
+
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index 9b5899e..d14f0bd 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -220,33 +220,59 @@ config("compiler") {
+         ]
+       }
+     } else if (current_cpu == "arm") {
+-      cflags += [
+-        "-march=$arm_arch",
+-        "-mfloat-abi=$arm_float_abi",
+-      ]
+-      if (arm_tune != "") {
+-        cflags += [ "-mtune=$arm_tune" ]
+-      }
+-      if (arm_use_thumb) {
+-        cflags += [ "-mthumb" ]
+-        if (is_android && !is_clang) {  # Clang doesn't support this option.
+-          cflags += [ "-mthumb-interwork" ]
++      if (is_clang) {
++        if (arm_arch != "armv7-a") {
++          assert(false, "Any arm (32-bit) arch other than armv7-a is not supported by the bundled clang right now.")
+         }
+-      }
+-      if (!is_clang) {
+-        # Clang doesn't support these flags.
++        if (arm_float_abi == "softfp" || arm_float_abi == "soft") {
++          assert(false, "ARM softfloat is not supported by the bundled clang right now.")
++        }
++
++        # Any other target is not supported by the bundled clang right now.
++        # (the compiler-rt binaries inside srC/buildtools/linux-x64/clang/lib/clang/13.0.0/lib are not provided for anything else)
++        # If we specify something other than `armv7` (like `arm`, `armv7a`, `armv7-a`, `armv7l`) as the first part of the target triple,
++        # clang will attempt to load the compiler builtins (compiler-rt) from
++        #   `buildtools/linux-x64/clang/lib/clang/13.0.0/lib/linux/libclang_rt.builtins-armhf.a`
++        # instead of from
++        #   `buildtools/linux-x64/clang/lib/clang/13.0.0/lib/armv7-unknown-linux-gnueabihf/libclang_rt.builtins.a`,
++        # resulting in errors.
++        #
++        # You can use
++        #   `buildtools/linux-x64/clang/bin/clang++ --rtlib=compiler-rt --target=<target-triple> --print-libgcc-file-name`
++        # to print the compiler builtin location btw.
++        # (took me like a day to debug all this)
++
++        cflags += ["--target=armv7-linux-gnueabihf"]
++        ldflags += ["--target=armv7-linux-gnueabihf"]
++      } else {
+         cflags += [
+-          # The tree-sra optimization (scalar replacement for
+-          # aggregates enabling subsequent optimizations) leads to
+-          # invalid code generation when using the Android NDK's
+-          # compiler (r5-r7). This can be verified using
+-          # webkit_unit_tests' WTF.Checked_int8_t test.
+-          "-fno-tree-sra",
+-
+-          # The following option is disabled to improve binary
+-          # size and performance in gcc 4.9.
+-          "-fno-caller-saves",
++          "-march=$arm_arch",
++          "-mfloat-abi=$arm_float_abi",
+         ]
++        if (arm_tune != "") {
++          cflags += [ "-mtune=$arm_tune" ]
++        }
++        if (arm_use_thumb) {
++          cflags += [ "-mthumb" ]
++          if (is_android && !is_clang) {  # Clang doesn't support this option.
++            cflags += [ "-mthumb-interwork" ]
++          }
++        }
++        if (!is_clang) {
++          # Clang doesn't support these flags.
++          cflags += [
++            # The tree-sra optimization (scalar replacement for
++            # aggregates enabling subsequent optimizations) leads to
++            # invalid code generation when using the Android NDK's
++            # compiler (r5-r7). This can be verified using
++            # webkit_unit_tests' WTF.Checked_int8_t test.
++            "-fno-tree-sra",
++
++            # The following option is disabled to improve binary
++            # size and performance in gcc 4.9.
++            "-fno-caller-saves",
++          ]
++        }
+       }
+     }
+ 
+diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
+index 17ffd1b..6e6c45c 100644
+--- a/build/config/sysroot.gni
++++ b/build/config/sysroot.gni
+@@ -30,9 +30,14 @@ if (current_toolchain == default_toolchain && target_sysroot != "") {
+   if (use_default_linux_sysroot && !is_fuchsia) {
+     if (current_cpu == "x64") {
+       sysroot = rebase_path("//build/linux/debian_sid_amd64-sysroot")
+-    } else {
++    } else if (current_cpu == "arm64") {
+       sysroot = rebase_path("//build/linux/debian_sid_arm64-sysroot")
++    } else if (current_cpu == "arm") {
++      sysroot = rebase_path("//build/linux/debian_sid_arm-sysroot")
++    } else {
++      assert(false, "Unknown CPU: $current_cpu.")
+     }
++
+     assert(
+         exec_script("//build/dir_exists.py", [ sysroot ], "string") == "True",
+         "Missing sysroot ($sysroot). To fix, run: build/linux/sysroot_scripts/install-sysroot.py --arch=$current_cpu")
+diff --git a/build/toolchain/linux/BUILD.gn b/build/toolchain/linux/BUILD.gn
+index f8b26c0..0e77cae 100644
+--- a/build/toolchain/linux/BUILD.gn
++++ b/build/toolchain/linux/BUILD.gn
+@@ -110,6 +110,27 @@ gcc_toolchain("clang_arm64") {
+   is_clang = true
+ }
+ 
++gcc_toolchain("clang_arm") {
++  if (use_clang_type_profiler) {
++    prefix = rebase_path("//third_party/llvm-allocated-type/Linux_x64/bin",
++                         root_build_dir)
++  } else {
++    prefix = rebase_path("//buildtools/linux-x64/clang/bin", root_build_dir)
++  }
++  cc = "${compiler_prefix}$prefix/clang"
++  cxx = "${compiler_prefix}$prefix/clang++"
++
++  readelf = "readelf"
++  nm = "${prefix}/llvm-nm"
++  ar = "${prefix}/llvm-ar"
++  ld = cxx
++  llvm_objcopy = "${prefix}/llvm-objcopy"
++
++  toolchain_cpu = "arm"
++  toolchain_os = "linux"
++  is_clang = true
++}
++
+ gcc_toolchain("x64") {
+   prefix = ""
+   cc = "${compiler_prefix}${prefix}gcc"
+-- 
+2.32.0
+
