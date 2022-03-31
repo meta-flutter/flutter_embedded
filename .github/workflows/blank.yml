@@ -21,13 +21,39 @@ jobs:
       
       - uses: actions/checkout@v1
       
-      - name: Build & Configure engine
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo ::set-output name=hash::$(cat engine.version.stable)
+        
+      - name: Test output
+        run: echo ${{ steps.engine-version-stable.outputs.hash }}
+      
+      - name: build engine (armv7 hard-float debug)
         uses: ./.github/actions/build-engine
         with:
-          ref: ab46186b246f5a36bd1f3f295d14a43abb1e2f38
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
           is-host: false
           runtime-mode: debug
           os: linux
           cpu: arm
           additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
-
+          
+      - name: build engine (armv7 hard-float profile)
+        uses: ./.github/actions/build-engine
+        with:
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
+          is-host: false
+          runtime-mode: profile
+          os: linux
+          cpu: arm
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+      
+      - name: build engine (armv7 hard-float release)
+        uses: ./.github/actions/build-engine
+        with:
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
+          is-host: false
+          runtime-mode: release
+          os: linux
+          cpu: arm
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
