@@ -1,11 +1,16 @@
-name: engine_package_build
+name: x64-embedder-engine
+
 
 on:
-  push:
-    branches: [ main, ci ]
   pull_request:
-    branches: [ main, ci ]
+    types: [ opened, synchronize, reopened, closed ]
+  release:
+    types: [ published, created, edited ]
   repository_dispatch:
+  workflow_dispatch:
+  schedule:
+    # daily
+    - cron:  '0 0 * * *'
 
 jobs:
   x86_64-linux-gcc:
