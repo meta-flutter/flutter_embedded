@@ -40,6 +40,7 @@ jobs:
           mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
@@ -59,6 +60,7 @@ jobs:
           mkdir release && cd release
           echo "Create Release Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
@@ -78,6 +80,7 @@ jobs:
           mkdir profile && cd profile
           echo "Create Profile Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
@@ -100,6 +103,7 @@ jobs:
           mkdir -p build/debug && cd build/debug
           echo "Create Debug Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
@@ -110,6 +114,7 @@ jobs:
           mkdir release && cd release
           echo "Create Release Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
@@ -120,6 +125,7 @@ jobs:
           mkdir profile && cd profile
           echo "Create Profile Packages"
           cmake ../.. \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
             -DTARGET_TRIPLE=${TRIPLET} \
             -DTARGET_ARCH=x64 \
             -DCHANNEL=stable \
