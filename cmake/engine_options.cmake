@@ -113,6 +113,12 @@ if(ENGINE_SIMULATOR)
     list(APPEND ENGINE_FLAGS --simulator)
 endif()
 
+if(ENGINE_GOMA)
+    list(APPEND ENGINE_FLAGS --goma)
+else()
+    list(APPEND ENGINE_FLAGS --no-goma)
+endif()
+
 if(ENGINE_LTO)
     list(APPEND ENGINE_FLAGS --lto)
 else()
