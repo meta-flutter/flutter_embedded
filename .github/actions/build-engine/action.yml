@@ -97,7 +97,6 @@ runs:
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
-          --target-dir build \
           ${{ inputs.additional-gn-args }}
 
     - name: Configure engine (cross, not linux armhf)
@@ -109,7 +108,6 @@ runs:
           --runtime-mode ${{ inputs.runtime-mode }} \
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
-          --target-dir build \
           ${{ inputs.additional-gn-args }}
 
     - name: Configure engine (cross, linux armhf)
@@ -123,18 +121,24 @@ runs:
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
           --arm-float-abi hard \
-          --target-dir build \
           ${{ inputs.additional-gn-args }}
+    
+    - name: Find out build dir path
+      id: build-dir-path
+      shell: bash
+      working-directory: ../engine/src/out/
+      run: |
+        echo "::set-output name=path::$GITHUB_WORKSPACE/engine/src/out/$(find . -mindepth 1 -maxdepth 1 -type d -print | head -n 1)"
     
     - name: Append raw gn args
       if: ${{ inputs.additional-raw-gn-args != '' }}
       shell: bash
-      working-directory: ../engine/src/out/build/
+      working-directory: ../engine/
       run: |
-        echo ${{ inputs.additional-raw-gn-args }} >> args.gn
+        echo ${{ inputs.additional-raw-gn-args }} >> ${{ steps.build-dir-path.outputs.path }}/args.gn
 
     - name: Build engine
       shell: bash
       working-directory: ../engine
       run: |
-        ninja -C $GITHUB_WORKSPACE/../engine/src/out/build
+        ninja -C ${{ steps.build-dir-path.outputs.path }}
