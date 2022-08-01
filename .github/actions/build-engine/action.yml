@@ -27,6 +27,9 @@ inputs:
   additional-gn-args:
     description: 'Additional arguments passed to flutter/tools/gn.'
     required: false
+  additional-raw-gn-args:
+    description: 'Additional lines to be appended to the generated args.gn file.'
+    required: false
 runs:
   using: "composite"
   steps:
