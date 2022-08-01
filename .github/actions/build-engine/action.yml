@@ -61,39 +61,38 @@ runs:
         
     - name: Bootstrap engine environment
       shell: bash
-      working-directory: ..
       run: |
         mkdir -p engine
         echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > engine/.gclient
     
     - name: Install engine sources
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
-        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D -j $(nproc)
+        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D
 
     - name: Apply patch "Fix armv7 build"
       shell: bash
-      working-directory: ../engine/src
+      working-directory: engine/src
       run: |
         git apply $GITHUB_WORKSPACE/0001-fix-armv7-build.patch
     
     - name: Show git status
       shell: bash
-      working-directory: ../engine/src
+      working-directory: engine/src
       run: git status
 
     - name: Fetch arm sysroot
       if: ${{ inputs.cpu == 'arm' }}
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
         ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
     
     - name: Configure engine (host)
       if: ${{ inputs.is-host == 'true' }}
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
@@ -102,7 +101,7 @@ runs:
     - name: Configure engine (cross, not linux armhf)
       if: ${{ inputs.is-host == 'false' && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
@@ -113,7 +112,7 @@ runs:
     - name: Configure engine (cross, linux armhf)
       if: ${{ inputs.is-host == 'false' && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
         PKG_CONFIG_PATH=$GITHUB_WORKSPACE/engine/src/build/linux/debian_sid_arm-sysroot/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig \
         ./src/flutter/tools/gn \
@@ -126,19 +125,19 @@ runs:
     - name: Find out build dir path
       id: build-dir-path
       shell: bash
-      working-directory: ../engine/src/out/
+      working-directory: engine/src/out/
       run: |
         echo "::set-output name=path::$GITHUB_WORKSPACE/engine/src/out/$(find . -mindepth 1 -maxdepth 1 -type d -print | head -n 1)"
     
     - name: Append raw gn args
       if: ${{ inputs.additional-raw-gn-args != '' }}
       shell: bash
-      working-directory: ../engine/
+      working-directory: engine
       run: |
         echo ${{ inputs.additional-raw-gn-args }} >> ${{ steps.build-dir-path.outputs.path }}/args.gn
 
     - name: Build engine
       shell: bash
-      working-directory: ../engine
+      working-directory: engine
       run: |
         ninja -C ${{ steps.build-dir-path.outputs.path }}
