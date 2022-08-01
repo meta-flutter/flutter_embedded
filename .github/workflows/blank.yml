@@ -37,6 +37,7 @@ jobs:
           os: linux
           cpu: arm
           additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+          additional-raw-gn-args: 'arm_tune = "cortex-a72+crc+crypto"'
     
   pi4-profile:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, profile mode).'
@@ -55,6 +56,7 @@ jobs:
           os: linux
           cpu: arm
           additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+          additional-raw-gn-args: 'arm_tune = "cortex-a72+crc+crypto"'
   
   pi4-release:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, release mode).'
@@ -74,3 +76,4 @@ jobs:
           os: linux
           cpu: arm
           additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+          additional-raw-gn-args: 'arm_tune = "cortex-a72+crc+crypto"'
