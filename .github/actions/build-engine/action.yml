@@ -94,15 +94,8 @@ runs:
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
-        echo ${{ inputs.additional-raw-gn-args }} >> $GITHUB_WORKSPACE/../engine/src/out/host_${{ inputs.runtime-mode }}
-
-    - name: Build engine (host)
-      if: ${{ inputs.is-host == 'true' }}
-      shell: bash
-      working-directory: ../engine
-      run: |
-        ninja -C $GITHUB_WORKSPACE/../engine/src/out/host_${{ inputs.runtime-mode }}
 
     - name: Configure engine (cross, not linux armhf)
       if: ${{ inputs.is-host == 'false' && !(inputs.os == 'linux' && inputs.cpu == 'arm') }}
@@ -113,8 +106,8 @@ runs:
           --runtime-mode ${{ inputs.runtime-mode }} \
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
-        echo ${{ inputs.additional-raw-gn-args }} >> $GITHUB_WORKSPACE/../engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
 
     - name: Configure engine (cross, linux armhf)
       if: ${{ inputs.is-host == 'false' && (inputs.os == 'linux' && inputs.cpu == 'arm') }}
@@ -127,12 +120,18 @@ runs:
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
           --arm-float-abi hard \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
-        echo ${{ inputs.additional-raw-gn-args }} >> $GITHUB_WORKSPACE/../engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
+    
+    - name: Append raw gn args
+      if: ${{ inputs.additional-raw-gn-args != '' }}
+      shell: bash
+      working-directory: ../engine/src/out/build/
+      run: |
+        echo ${{ inputs.additional-raw-gn-args }} >> args.gn
 
-    - name: Build engine (cross)
-      if: ${{ inputs.is-host == 'false' }}
+    - name: Build engine
       shell: bash
       working-directory: ../engine
       run: |
-        ninja -C $GITHUB_WORKSPACE/../engine/src/out/${{ inputs.os }}_${{ inputs.runtime-mode }}_${{ inputs.cpu }}
+        ninja -C $GITHUB_WORKSPACE/../engine/src/out/build
