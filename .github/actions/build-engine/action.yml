@@ -59,17 +59,19 @@ runs:
       run: |
         gclient --version
         
-    - name: Bootstrap engine environment
-      shell: bash
-      run: |
-        mkdir -p engine
-        echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps":True }, },]' > engine/.gclient
-    
-    - name: Install engine sources
-      shell: bash
-      working-directory: engine
-      run: |
-        gclient sync --no-history --revision src/flutter@${{ inputs.ref }} -R -D
+    - name: Download cached engine sources
+      uses: actions/cache@v3
+      id: cache
+      with:
+        path: engine
+        key: engine-${{ inputs.ref }}
+
+    - name: Check if downloading engine sources succeeded
+      if: ${{ steps.cache.outputs.cache-hit == 'false' }}
+      uses: actions/github-script@v3
+      with:
+        script: |
+          core.setFailed('Could not find cached engine source!')
 
     - name: Apply patch "Fix armv7 build"
       shell: bash
@@ -81,13 +83,6 @@ runs:
       shell: bash
       working-directory: engine/src
       run: git status
-
-    - name: Fetch arm sysroot
-      if: ${{ inputs.cpu == 'arm' }}
-      shell: bash
-      working-directory: engine
-      run: |
-        ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
     
     - name: Configure engine (host)
       if: ${{ inputs.is-host == 'true' }}
@@ -96,6 +91,7 @@ runs:
       run: |
         ./src/flutter/tools/gn \
           --runtime-mode ${{ inputs.runtime-mode }} \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
 
     - name: Configure engine (cross, not linux armhf)
@@ -107,6 +103,7 @@ runs:
           --runtime-mode ${{ inputs.runtime-mode }} \
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
 
     - name: Configure engine (cross, linux armhf)
@@ -120,24 +117,18 @@ runs:
           --target-os ${{ inputs.os }} \
           --${{ inputs.os }}-cpu ${{ inputs.cpu }} \
           --arm-float-abi hard \
+          --target-dir build \
           ${{ inputs.additional-gn-args }}
-    
-    - name: Find out build dir path
-      id: build-dir-path
-      shell: bash
-      working-directory: engine/src/out/
-      run: |
-        echo "::set-output name=path::$GITHUB_WORKSPACE/engine/src/out/$(find . -mindepth 1 -maxdepth 1 -type d -print | head -n 1)"
     
     - name: Append raw gn args
       if: ${{ inputs.additional-raw-gn-args != '' }}
       shell: bash
-      working-directory: engine
+      working-directory: engine/src/out/build/
       run: |
-        echo ${{ inputs.additional-raw-gn-args }} >> ${{ steps.build-dir-path.outputs.path }}/args.gn
+        echo ${{ inputs.additional-raw-gn-args }} >> args.gn
 
     - name: Build engine
       shell: bash
-      working-directory: engine
+      working-directory: engine/src/out/build
       run: |
-        ninja -C ${{ steps.build-dir-path.outputs.path }}
+        ninja

@@ -9,15 +9,89 @@ on:
   workflow_dispatch:
   
 jobs:
+  populate-engine-src-cache:
+    name: 'Fetch the engine sources, prune unneeded data (git history, etc), and cache them to make subsequent jobs run faster.'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo ::set-output name=hash::$(cat engine.version.stable)
+      
+      - uses: actions/cache@v3
+        id: stamp-cache
+        with:
+          path: engine-cache-stamp
+          key: engine-cache-stamp-${{ steps.engine-version-stable.outputs.hash }}
+
+      - uses: actions/cache@v3
+        id: cache
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        with:
+          path: engine
+          key: engine-${{ steps.engine-version-stable.outputs.hash }}
+
+      - name: Setup environment variables
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        run: |
+          # echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
+          echo GCLIENT_PY3=1 >> $GITHUB_ENV
+          echo $PATH
+          echo is-host: ${{ inputs.is-host }}
+          
+      - name: Setup gclient
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        run: |
+          gclient --version
+          
+      - name: Bootstrap engine environment
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        run: |
+          mkdir -p engine
+          echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps": True, "download_android_deps": False}, },]' > engine/.gclient
+      
+      - name: Install engine sources
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        working-directory: engine
+        run: |
+          gclient sync --revision src/flutter@${{ steps.engine-version-stable.outputs.hash }} -R -D
+      
+      - name: Install linux arm sysroot
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        working-directory: engine
+        run: |
+
+      - name: Prune git history
+        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        shell: bash
+        working-directory: engine
+        run: |
+          for FILE in $(find . -type d -name .git)
+          do
+            pushd "$FILE/.."
+            git rev-parse HEAD > .git/shallow
+            git tag -d $(git tag -l) || true
+            for ref in $(git for-each-ref --format="%(refname)")
+            do
+              git update-ref -d '$ref'
+            done
+            git remote remove origin
+            git reflog expire --expire=all --all
+            git gc --prune=all
+            popd
+          done
+      
   pi4-debug:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, debug mode).'
     runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
        
     steps:
-      - name: Event Information
-        run: |
-          echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
-      
       - uses: actions/checkout@v1
       
       - name: Read stable engine version
@@ -50,6 +124,8 @@ jobs:
   pi4-profile:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, profile mode).'
     runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
+
     steps:
       - uses: actions/checkout@v1
       
@@ -81,6 +157,7 @@ jobs:
   pi4-release:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, release mode).'
     runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
     
     steps:
       - uses: actions/checkout@v1
