@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v1
+      
       - name: Read stable engine version
         id: engine-version-stable
         run: echo ::set-output name=hash::$(cat engine.version.stable)
