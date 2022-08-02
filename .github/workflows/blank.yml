@@ -107,7 +107,7 @@ jobs:
             git tag -d $(git tag -l) || true
             for ref in $(git for-each-ref --format="%(refname)")
             do
-              git update-ref -d '$ref'
+              git update-ref -d "$ref"
             done
             git remote remove origin
             git reflog expire --expire=all --all
