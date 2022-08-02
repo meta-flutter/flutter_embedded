@@ -50,7 +50,6 @@ jobs:
           # echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
           echo GCLIENT_PY3=1 >> $GITHUB_ENV
           echo $PATH
-          echo is-host: ${{ inputs.is-host }}
           
       - name: Setup gclient
         if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
@@ -63,7 +62,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p engine
-          echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps": True, "download_android_deps": False}, },]' > engine/.gclient
+          echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "https://github.com/flutter/engine.git", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps": True, "download_android_deps": False}, },]' > engine/.gclient
       
       - name: Install engine sources
         if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
@@ -77,6 +76,7 @@ jobs:
         shell: bash
         working-directory: engine
         run: |
+          ./src/build/linux/sysroot_scripts/install-sysroot.py --arch=arm
 
       - name: Prune git history
         if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
