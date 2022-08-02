@@ -2,9 +2,9 @@ name: engine_package_build
 
 on:
   push:
-    branches: [ main, ci ]
+    branches: [ ci ]
   pull_request:
-    branches: [ main, ci ]
+    branches: [ ci ]
   repository_dispatch:
   workflow_dispatch:
   
