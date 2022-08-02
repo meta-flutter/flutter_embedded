@@ -1,4 +1,4 @@
-name: engine_package_build
+name: build engine for pi4
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   
 jobs:
   populate-engine-src-cache:
-    name: 'Fetch the engine sources, prune unneeded data (git history, etc), and cache them to make subsequent jobs run faster.'
+    name: 'Prepopulate engine source cache'
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,14 @@ jobs:
 
       - name: Read stable engine version
         id: engine-version-stable
-        run: echo ::set-output name=hash::$(cat engine.version.stable)
+
+        # Read the engine.version.stable file and trim away anything that's not a hex digit
+        # (So we don't include whitespace in the output variable, if that's possible)
+        run: echo ::set-output name=hash::$(cat engine.version.stable | tr -dc [:xdigit:])
+      
+      - name: Log stable engine version
+        run: |
+          echo stable engine version: "${{ steps.engine-version-stable.outputs.hash }}"
       
       - name: Create engine cache stamp dir
         shell: bash
