@@ -146,9 +146,9 @@ jobs:
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-debug
           path: |
-            ${{ github.workspace }}/engine/src/out/linux_debug_arm/libflutter_engine.so
-            ${{ github.workspace }}/engine/src/out/linux_debug_arm/icudtl.dat
-            ${{ github.workspace }}/engine/src/out/linux_debug_arm/flutter_embedder.h
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
     
   pi4-profile:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, profile mode).'
@@ -178,10 +178,10 @@ jobs:
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-profile
           path: |
-            ${{ github.workspace }}/engine/src/out/linux_profile_arm/libflutter_engine.so
-            ${{ github.workspace }}/engine/src/out/linux_profile_arm/icudtl.dat
-            ${{ github.workspace }}/engine/src/out/linux_profile_arm/flutter_embedder.h
-            ${{ github.workspace }}/engine/src/out/linux_profile_arm/clang_x64/gen_snapshot
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
+            ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot
   
   pi4-release:
     name: 'Build and deploy flutter engine for Raspberry Pi 4 (32-bit, release mode).'
@@ -211,7 +211,7 @@ jobs:
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-release
           path: |
-            ${{ github.workspace }}/engine/src/out/linux_release_arm/libflutter_engine.so
-            ${{ github.workspace }}/engine/src/out/linux_release_arm/icudtl.dat
-            ${{ github.workspace }}/engine/src/out/linux_release_arm/flutter_embedder.h
-            ${{ github.workspace }}/engine/src/out/linux_release_arm/clang_x64/gen_snapshot
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
+            ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot

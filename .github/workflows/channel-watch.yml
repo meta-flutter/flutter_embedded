@@ -1,0 +1,50 @@
+name: watch for flutter updates
+
+# Controls when the action will run. 
+on:
+  # Check every 15 minutes
+  schedule:    
+    - cron: "*/15 * * * *"
+
+  # Triggers the workflow on push or pull request events but only for the ci branch
+  push:
+    branches: [ ci ]
+  pull_request:
+    branches: [ ci ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Get flutter engine.version for stable channel
+        run: |
+          wget -O engine.version.stable https://raw.githubusercontent.com/flutter/flutter/stable/bin/internal/engine.version
+          ls -lah
+
+      - name: Check if stable engine version changed 
+        id: check-roll
+        run: |
+          if git diff-index --quiet HEAD --; then
+            echo "No changes"
+            echo ::set-output name=changed::false
+          else
+            echo "Delta"
+            echo ::set-output name=changed::true
+          fi
+
+      - name: Commit new stable engine version
+        if: ${{ steps.check-roll.outputs.changed == 'true' }}
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: 'Roll engine (stable)'
+          add: 'engine.version.stable'
