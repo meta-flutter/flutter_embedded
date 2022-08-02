@@ -51,11 +51,28 @@ jobs:
           echo GCLIENT_PY3=1 >> $GITHUB_ENV
           echo $PATH
           
+      - name: Clone depot tools
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $GITHUB_WORKSPACE/depot_tools
+          echo $GITHUB_WORKSPACE/depot_tools >> $GITHUB_PATH
+      
+      - name: Setup environment variables
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: |
+          # echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
+          echo GCLIENT_PY3=1 >> $GITHUB_ENV
+          echo $PATH
+          echo is-host: ${{ inputs.is-host }}
+          
       - name: Setup gclient
         if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         run: |
           gclient --version
+          echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
           
       - name: Bootstrap engine environment
         if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
