@@ -13,8 +13,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  check-for-roll:
+    name: 'Check if stable engine commit changed'
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check-roll.outputs.changed }}
 
     steps:
       - uses: actions/checkout@v2
@@ -42,3 +45,9 @@ jobs:
           default_author: github_actions
           message: 'Roll engine (stable)'
           add: 'engine.version.stable'
+          
+  build:
+    name: 'Invoke build workflow if changed'
+    needs: check-for-roll
+    if: ${{ needs.check-for-roll.outputs.changed == 'true' }}
+    uses: ./.github/workflows/build.yml
