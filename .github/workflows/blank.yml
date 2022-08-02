@@ -20,6 +20,11 @@ jobs:
         id: engine-version-stable
         run: echo ::set-output name=hash::$(cat engine.version.stable)
       
+      - name: Create engine cache stamp dir
+        shell: bash
+        run: |
+          mkdir -p engine-cache-stamp
+
       - uses: actions/cache@v3
         id: stamp-cache
         with:
@@ -33,13 +38,13 @@ jobs:
 
       - uses: actions/cache@v3
         id: cache
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         with:
           path: engine
           key: engine-${{ steps.engine-version-stable.outputs.hash }}
 
       - name: Setup environment variables
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         run: |
           # echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
@@ -48,33 +53,33 @@ jobs:
           echo is-host: ${{ inputs.is-host }}
           
       - name: Setup gclient
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         run: |
           gclient --version
           
       - name: Bootstrap engine environment
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         run: |
           mkdir -p engine
           echo 'solutions = [{ "managed": False, "name": "src/flutter", "url": "${{ inputs.repository }}", "deps_file": "DEPS", "custom_vars":{ "download_linux_deps": True, "download_android_deps": False}, },]' > engine/.gclient
       
       - name: Install engine sources
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         working-directory: engine
         run: |
           gclient sync --revision src/flutter@${{ steps.engine-version-stable.outputs.hash }} -R -D
       
       - name: Install linux arm sysroot
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         working-directory: engine
         run: |
 
       - name: Prune git history
-        if: ${{ steps.stamp-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
         shell: bash
         working-directory: engine
         run: |
