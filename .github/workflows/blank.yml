@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      
+
       - name: Read stable engine version
         id: engine-version-stable
         run: echo ::set-output name=hash::$(cat engine.version.stable)
@@ -25,6 +25,11 @@ jobs:
         with:
           path: engine-cache-stamp
           key: engine-cache-stamp-${{ steps.engine-version-stable.outputs.hash }}
+
+      - name: Log cache hit
+        shell: bash
+        run: |
+          echo cache hit? ${{ steps.stamp-cache.outputs.cache-hit }}
 
       - uses: actions/cache@v3
         id: cache
