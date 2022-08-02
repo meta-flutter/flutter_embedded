@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ENGINE_ROLL_TOKEN }}
       
       - name: Get flutter engine.version for stable channel
         run: |
@@ -45,9 +47,3 @@ jobs:
           default_author: github_actions
           message: 'Roll engine (stable)'
           add: 'engine.version.stable'
-          
-  build:
-    name: 'Invoke build workflow if changed'
-    needs: check-for-roll
-    if: ${{ needs.check-for-roll.outputs.changed == 'true' }}
-    uses: ./.github/workflows/build.yml
