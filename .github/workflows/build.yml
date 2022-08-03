@@ -244,11 +244,18 @@ jobs:
       - name: Check if theres a tag for this commit
         id: check-tag
         run: |
+          git status
+          git log
+          git tag --points-at HEAD
+          git tag --points-at HEAD | wc -l
           if [ $(git tag --points-at HEAD | wc -l) -ne 0 ]; then
+            echo is tagged
             echo ::set-output name=has-tag::true
           else
+            echo is untagged
             echo ::set-output name=has-tag::false
           fi
+          echo step output: ${{ steps.check-tag.ouputs.has-tag }}
         
       - uses: actions/download-artifact@v3
         if: ${{ steps.check-tag.ouputs.has-tag == 'true' }}
