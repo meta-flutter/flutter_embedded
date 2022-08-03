@@ -16,6 +16,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+      
+      - run: |
+          echo github.ref: ${{ github.ref }}
 
       - name: Read stable engine version
         id: engine-version-stable
