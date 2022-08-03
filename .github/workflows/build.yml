@@ -3,6 +3,8 @@ name: build engine for pi4
 on:
   push:
     branches: [ ci ]
+    tags:
+      - '*'
   pull_request:
     branches: [ ci ]
   repository_dispatch:
