@@ -50,6 +50,7 @@ jobs:
       # if the flutter people ever decide to point more than one tags at the stable SDK commit we're in trouble here
       - name: find out flutter SDK semver for this engine version
         id: flutter-version
+        working-directory: flutter
         run: |
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
           echo flutter version: ${{ steps.flutter-version.outputs.semver }}
