@@ -52,6 +52,9 @@ jobs:
         id: flutter-version
         working-directory: flutter
         run: |
+          pwd
+          git status
+          git log -n 1
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
           echo flutter version: $(git tag --points-at HEAD | tr -dc [:xdigit:])
 
