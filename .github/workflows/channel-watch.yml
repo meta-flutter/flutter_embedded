@@ -31,6 +31,7 @@ jobs:
           repository: flutter/flutter
           ref: stable
           path: flutter
+          fetch-depth: 0
   
       - run: |
           cp flutter/bin/internal/engine.version engine.version.stable
@@ -38,7 +39,7 @@ jobs:
       - name: Check if stable engine version changed 
         id: check-roll
         run: |
-          if git diff-index --quiet HEAD --; then
+          if git diff-index --quiet HEAD -- engine.version.stable; then
             echo "No changes"
             echo ::set-output name=changed::false
           else
@@ -60,7 +61,7 @@ jobs:
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
 
       - name: Commit new stable engine version
-        if: ${{ steps.check-roll.outputs.changed == 'true' }}
+        #if: ${{ steps.check-roll.outputs.changed == 'true' }}
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
