@@ -31,6 +31,7 @@ jobs:
           repository: flutter/flutter
           ref: stable
           path: flutter
+          # fetch complete history
           fetch-depth: 0
   
       - run: |
@@ -53,15 +54,13 @@ jobs:
         id: flutter-version
         working-directory: flutter
         run: |
-          pwd
-          git status
-          git log -n 1
-          git tag -l
-          echo flutter version: $(git tag --points-at HEAD)
-          echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
-
+          echo ::set-output name=semver::$(git tag --points-at HEAD | tr -d [:space:])
+          echo flutter version: ${{ steps.flutter-version.outputs.semver }}
+      
       - name: Commit new stable engine version
-        #if: ${{ steps.check-roll.outputs.changed == 'true' }}
+        # the if is not really necessary since the add-and-commit action won't push empty commits, but this way it feels safer
+        # (it won't even push the tag if we have an empty commit)
+        if: ${{ steps.check-roll.outputs.changed == 'true' }}
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
