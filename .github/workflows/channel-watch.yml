@@ -66,4 +66,4 @@ jobs:
           default_author: github_actions
           message: 'Roll engine (stable)'
           add: 'engine.version.stable'
-          tag: ${{ steps.flutter-version.outputs.semver }}
+          tag: ${{ steps.flutter-version.outputs.semver }} --force
