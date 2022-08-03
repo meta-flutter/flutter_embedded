@@ -53,7 +53,7 @@ jobs:
         working-directory: flutter
         run: |
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
-          echo flutter version: ${{ steps.flutter-version.outputs.semver }}
+          echo flutter version: $(git tag --points-at HEAD | tr -dc [:xdigit:])
 
       - name: Commit new stable engine version
         if: ${{ steps.check-roll.outputs.changed == 'true' }}
