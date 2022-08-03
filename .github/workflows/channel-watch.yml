@@ -55,8 +55,9 @@ jobs:
           pwd
           git status
           git log -n 1
+          git tag -l
+          echo flutter version: $(git tag --points-at HEAD)
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -dc [:xdigit:])
-          echo flutter version: $(git tag --points-at HEAD | tr -dc [:xdigit:])
 
       - name: Commit new stable engine version
         if: ${{ steps.check-roll.outputs.changed == 'true' }}
