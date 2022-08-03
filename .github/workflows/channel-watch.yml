@@ -67,3 +67,4 @@ jobs:
           message: 'Roll engine (stable)'
           add: 'engine.version.stable'
           tag: ${{ steps.flutter-version.outputs.semver }} --force
+          tag_push: '--force'
