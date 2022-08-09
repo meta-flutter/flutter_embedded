@@ -261,25 +261,25 @@ jobs:
           echo "has tag: ${{ steps.check-tag.outputs.has-tag }}"
       
       - uses: actions/download-artifact@v3
-        if: ${{ steps.check-tag.ouputs.has-tag == 'true' }}
+        if: ${{ steps.check-tag.outputs.has-tag == 'true' }}
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-debug
           path: pi4-debug
         
       - uses: actions/download-artifact@v3
-        if: ${{ steps.check-tag.ouputs.has-tag == 'true' }}
+        if: ${{ steps.check-tag.outputs.has-tag == 'true' }}
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-profile
           path: pi4-profile
         
       - uses: actions/download-artifact@v3
-        if: ${{ steps.check-tag.ouputs.has-tag == 'true' }}
+        if: ${{ steps.check-tag.outputs.has-tag == 'true' }}
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-release
           path: pi4-release
     
       - uses: softprops/action-gh-release@v0.1.14
-        if: ${{ steps.check-tag.ouputs.has-tag == 'true' }}
+        if: ${{ steps.check-tag.outputs.has-tag == 'true' }}
         with:
           files: |
             pi4-debug
