@@ -251,6 +251,7 @@ jobs:
           if [ $(git tag --points-at HEAD | wc -l) -ne 0 ]; then
             echo is tagged
             echo '::set-output name=has-tag::true'
+            echo "::set-output name=tag::$(git tag -n 1 --points-at HEAD | tr -d [:space:])"
           else
             echo is untagged
             echo '::set-output name=has-tag::false'
@@ -281,6 +282,7 @@ jobs:
       - uses: softprops/action-gh-release@v0.1.14
         if: ${{ steps.check-tag.outputs.has-tag == 'true' }}
         with:
+          tag: ${{ steps.check-tag.outputs.tag }}
           files: |
             pi4-debug
             pi4-profile
