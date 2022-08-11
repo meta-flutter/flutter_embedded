@@ -255,13 +255,25 @@ jobs:
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-release
           path: pi4-release
+      
+      - name: tar debug artifacts
+        run: |
+          XZ_DEFAULTS="-T 0" tar -cJvf pi4-debug.tar.xz ./pi4-debug/*
+      
+      - name: tar profile artifacts
+        run: |
+          XZ_DEFAULTS="-T 0" tar -cJvf pi4-profile.tar.xz ./pi4-profile/*
+          
+      - name: tar release artifacts
+        run: |
+          XZ_DEFAULTS="-T 0" tar -cJvf pi4-release.tar.xz ./pi4-release/*
     
       - uses: softprops/action-gh-release@v0.1.14
         with:
           files: |
-            pi4-debug
-            pi4-profile
-            pi4-release
+            pi4-debug.tar.xz
+            pi4-profile.tar.xz
+            pi4-release.tar.xz
     
     
     
