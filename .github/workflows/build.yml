@@ -257,16 +257,19 @@ jobs:
           path: pi4-release
       
       - name: tar debug artifacts
+        working-directory: pi4-debug
         run: |
-          XZ_DEFAULTS="-T 0" tar -cJvf pi4-debug.tar.xz ./pi4-debug/*
+          XZ_DEFAULTS="-T 0" tar -cJvf ../pi4-debug.tar.xz *
       
       - name: tar profile artifacts
+        working-directory: pi4-profile
         run: |
-          XZ_DEFAULTS="-T 0" tar -cJvf pi4-profile.tar.xz ./pi4-profile/*
+          XZ_DEFAULTS="-T 0" tar -cJvf ../pi4-profile.tar.xz *
           
       - name: tar release artifacts
+        working-directory: pi4-release
         run: |
-          XZ_DEFAULTS="-T 0" tar -cJvf pi4-release.tar.xz ./pi4-release/*
+          XZ_DEFAULTS="-T 0" tar -cJvf ../pi4-release.tar.xz *
     
       - uses: softprops/action-gh-release@v0.1.14
         with:
