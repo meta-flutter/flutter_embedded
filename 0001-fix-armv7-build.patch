@@ -1,4 +1,4 @@
-From 1c1c5eac4a81cf6cf29cfda599ff7bbfad022024 Mon Sep 17 00:00:00 2001
+From 5102c7ca5be73bea8a77e27486c3b0da7883bd1c Mon Sep 17 00:00:00 2001
 From: Hannes Winkler <hanneswinkler2000@web.de>
 Date: Wed, 11 Aug 2021 02:21:25 +0200
 Subject: [PATCH] fix armv7 build
@@ -10,7 +10,7 @@ Subject: [PATCH] fix armv7 build
  3 files changed, 81 insertions(+), 25 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 33517e8..ac22ee0 100644
+index 33517e8..6380258 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
 @@ -226,33 +226,63 @@ config("compiler") {
@@ -57,7 +57,7 @@ index 33517e8..ac22ee0 100644
 +        ldflags += ["--target=armv7-linux-gnueabihf"]
 +      
 +        if (arm_tune != "") {
-+          cflags += [ "-mtune=$arm_tune" ]
++          cflags += [ "-mtune=$arm_tune", "-mcpu=$arm_tune" ]
 +        }
 +      } else {
          cflags += [
