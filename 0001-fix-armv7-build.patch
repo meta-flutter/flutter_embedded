@@ -1,19 +1,19 @@
-From 90b4380691bca6da12ed8803566c85cde4b2742e Mon Sep 17 00:00:00 2001
+From 1c1c5eac4a81cf6cf29cfda599ff7bbfad022024 Mon Sep 17 00:00:00 2001
 From: Hannes Winkler <hanneswinkler2000@web.de>
 Date: Wed, 11 Aug 2021 02:21:25 +0200
 Subject: [PATCH] fix armv7 build
 
 ---
- build/config/compiler/BUILD.gn | 74 +++++++++++++++++++++++-----------
- build/config/sysroot.gni       |  7 +++-
- build/toolchain/linux/BUILD.gn | 21 ++++++++++
- 3 files changed, 77 insertions(+), 25 deletions(-)
+ build/config/compiler/BUILD.gn | 78 +++++++++++++++++++++++-----------
+ build/config/sysroot.gni       |  7 ++-
+ build/toolchain/linux/BUILD.gn | 21 +++++++++
+ 3 files changed, 81 insertions(+), 25 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 9b5899e..d14f0bd 100644
+index 33517e8..ac22ee0 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -220,33 +220,59 @@ config("compiler") {
+@@ -226,33 +226,63 @@ config("compiler") {
          ]
        }
      } else if (current_cpu == "arm") {
@@ -55,6 +55,10 @@ index 9b5899e..d14f0bd 100644
 +
 +        cflags += ["--target=armv7-linux-gnueabihf"]
 +        ldflags += ["--target=armv7-linux-gnueabihf"]
++      
++        if (arm_tune != "") {
++          cflags += [ "-mtune=$arm_tune" ]
++        }
 +      } else {
          cflags += [
 -          # The tree-sra optimization (scalar replacement for
@@ -150,5 +154,5 @@ index f8b26c0..0e77cae 100644
    prefix = ""
    cc = "${compiler_prefix}${prefix}gcc"
 -- 
-2.32.0
+2.25.1
 
