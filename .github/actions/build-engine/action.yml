@@ -126,6 +126,8 @@ runs:
       working-directory: engine/src/out/build/
       run: |
         echo '${{ inputs.additional-raw-gn-args }}' >> args.gn
+        echo '*** args.gn file: ***'
+        cat args.gn
 
     - name: Build engine
       shell: bash
