@@ -1,19 +1,19 @@
-From 5102c7ca5be73bea8a77e27486c3b0da7883bd1c Mon Sep 17 00:00:00 2001
+From bf35176776272d090bd6a9884ae16dcf86be269e Mon Sep 17 00:00:00 2001
 From: Hannes Winkler <hanneswinkler2000@web.de>
 Date: Wed, 11 Aug 2021 02:21:25 +0200
 Subject: [PATCH] fix armv7 build
 
 ---
- build/config/compiler/BUILD.gn | 78 +++++++++++++++++++++++-----------
+ build/config/compiler/BUILD.gn | 82 ++++++++++++++++++++++++----------
  build/config/sysroot.gni       |  7 ++-
  build/toolchain/linux/BUILD.gn | 21 +++++++++
- 3 files changed, 81 insertions(+), 25 deletions(-)
+ 3 files changed, 85 insertions(+), 25 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 33517e8..6380258 100644
+index 33517e8..a143012 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -226,33 +226,63 @@ config("compiler") {
+@@ -226,33 +226,67 @@ config("compiler") {
          ]
        }
      } else if (current_cpu == "arm") {
@@ -55,8 +55,12 @@ index 33517e8..6380258 100644
 +
 +        cflags += ["--target=armv7-linux-gnueabihf"]
 +        ldflags += ["--target=armv7-linux-gnueabihf"]
-+      
-+        if (arm_tune != "") {
++        
++        # arm.gni sets arm_tune to "generic-armv7-a" if no explicit tune is configured,
++        # but this is not supported by clang. So lets just overwrite it here.
++        if (arm_tune == "generic-armv7-a") {
++          cflags += [ "-mtune=generic", "-mcpu=generic" ]
++        } else if (arm_tune != "") {
 +          cflags += [ "-mtune=$arm_tune", "-mcpu=$arm_tune" ]
 +        }
 +      } else {
