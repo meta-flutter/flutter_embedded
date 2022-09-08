@@ -332,6 +332,107 @@ jobs:
             ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
             ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot
   
+  armv8-generic-debug:
+    name: 'Build and deploy flutter engine for generic ARMv8 (64-bit, debug mode).'
+    runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
+       
+    steps:
+      - uses: actions/checkout@v1
+      
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo ::set-output name=hash::$(cat engine.version.stable)
+        
+      - name: Test output
+        run: echo ${{ steps.engine-version-stable.outputs.hash }}
+      
+      - name: build engine
+        uses: ./.github/actions/build-engine
+        with:
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
+          is-host: false
+          runtime-mode: debug
+          os: linux
+          cpu: arm64
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+      
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-debug
+          path: |
+            ${{ github.workspace }}/engine/src/out/build/compile_commands.json
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
+  
+  armv8-generic-profile:
+    name: 'Build and deploy flutter engine for generic ARMv8 (64-bit, profile mode).'
+    runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
+
+    steps:
+      - uses: actions/checkout@v1
+      
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo ::set-output name=hash::$(cat engine.version.stable)
+        
+      - name: build engine
+        uses: ./.github/actions/build-engine
+        with:
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
+          is-host: false
+          runtime-mode: profile
+          os: linux
+          cpu: arm64
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+          
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-profile
+          path: |
+            ${{ github.workspace }}/engine/src/out/build/compile_commands.json
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
+            ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot
+  
+  armv8-generic-release:
+    name: 'Build and deploy flutter engine for generic ARMv8 (64-bit, release mode).'
+    runs-on: ubuntu-latest
+    needs: populate-engine-src-cache
+    
+    steps:
+      - uses: actions/checkout@v1
+      
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo ::set-output name=hash::$(cat engine.version.stable)
+        
+      - name: build engine (armv8 release)
+        uses: ./.github/actions/build-engine
+        with:
+          ref: "${{ steps.engine-version-stable.outputs.hash  }}"
+          is-host: false
+          runtime-mode: release
+          os: linux
+          cpu: arm64
+          additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
+          
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-release
+          path: |
+            ${{ github.workspace }}/engine/src/out/build/compile_commands.json
+            ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
+            ${{ github.workspace }}/engine/src/out/build/icudtl.dat
+            ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
+            ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot
+  
   release:
     name: 'Publish release'
     runs-on: ubuntu-latest
@@ -374,6 +475,21 @@ jobs:
         with:
           name: ${{ steps.engine-version-stable.outputs.hash }}-armv7-generic-release
           path: armv7-generic-release
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-debug
+          path: armv8-generic-debug
+        
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-profile
+          path: armv8-generic-profile
+        
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ steps.engine-version-stable.outputs.hash }}-armv8-generic-release
+          path: armv8-generic-release
           
       - name: Package Pi4 artifacts
         run: |
@@ -402,11 +518,26 @@ jobs:
           cp ../armv7-generic-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
           cp ../armv7-generic-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
           XZ_DEFAULTS="-T 0" tar -cJvf ../armv7-generic.tar.xz *
-
+      
+      - name: Package generic ARMv8 artifacts
+        run: |
+          mkdir -p armv8-generic
+          cd armv8-generic
+          cp ../engine.version.stable ./engine.version
+          cp ../armv8-generic-debug/libflutter_engine.so ./libflutter_engine.so.debug
+          cp ../armv8-generic-profile/libflutter_engine.so ./libflutter_engine.so.profile
+          cp ../armv8-generic-release/libflutter_engine.so ./libflutter_engine.so.release
+          cp ../armv8-generic-debug/flutter_embedder.h ./flutter_embedder.h
+          cp ../armv8-generic-debug/icudtl.dat ./icudtl.dat
+          cp ../armv8-generic-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
+          cp ../armv8-generic-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
+          XZ_DEFAULTS="-T 0" tar -cJvf ../armv8-generic.tar.xz *
+      
       - uses: softprops/action-gh-release@v0.1.14
         with:
           files: |
             pi4.tar.xz
             armv7-generic.tar.xz
+            armv8-generic.tar.xz
   
     
