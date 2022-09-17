@@ -540,13 +540,13 @@ jobs:
           cp ../armv8-generic-debug/icudtl.dat ./icudtl.dat
           cp ../armv8-generic-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
           cp ../armv8-generic-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
-          XZ_DEFAULTS="-T 0" tar -cJvf ../armv8-generic.tar.xz *
+          XZ_DEFAULTS="-T 0" tar -cJvf ../aarch64-generic.tar.xz *
       
       - uses: softprops/action-gh-release@v0.1.14
         with:
           files: |
             pi4.tar.xz
             armv7-generic.tar.xz
-            armv8-generic.tar.xz
+            aarch64-generic.tar.xz
   
     
