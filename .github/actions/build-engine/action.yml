@@ -129,7 +129,7 @@ runs:
         echo '*** args.gn file: ***'
         cat args.gn
         echo '*** rerunning gn gen ***'
-        gn gen .
+        gn gen --export-compile-commands .
 
     - name: Build engine
       shell: bash
