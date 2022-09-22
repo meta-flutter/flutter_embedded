@@ -1,33 +1,47 @@
-From bf35176776272d090bd6a9884ae16dcf86be269e Mon Sep 17 00:00:00 2001
+From ada889cdc227745e11dc7d3ff4933a9e54cc5b8a Mon Sep 17 00:00:00 2001
 From: Hannes Winkler <hanneswinkler2000@web.de>
 Date: Wed, 11 Aug 2021 02:21:25 +0200
-Subject: [PATCH] fix armv7 build
+Subject: [PATCH] fix armv7 build - make arm64 tune work
 
 ---
- build/config/compiler/BUILD.gn | 82 ++++++++++++++++++++++++----------
+ build/config/compiler/BUILD.gn | 87 ++++++++++++++++++++++++----------
  build/config/sysroot.gni       |  7 ++-
- build/toolchain/linux/BUILD.gn | 21 +++++++++
- 3 files changed, 85 insertions(+), 25 deletions(-)
+ build/toolchain/linux/BUILD.gn | 21 ++++++++
+ 3 files changed, 90 insertions(+), 25 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 33517e8..a143012 100644
+index 33517e8..51bada6 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -226,33 +226,67 @@ config("compiler") {
+@@ -3,7 +3,7 @@
+ # found in the LICENSE file.
+
+ import("//build/config/android/config.gni")
+-if (current_cpu == "arm") {
++if (current_cpu == "arm" || current_cpu == "arm64" ) {
+   import("//build/config/arm.gni")
+ }
+ if (is_posix) {
+@@ -225,34 +225,73 @@ config("compiler") {
+           "-mstackrealign",
          ]
        }
-     } else if (current_cpu == "arm") {
+-    } else if (current_cpu == "arm") {
 -      cflags += [
 -        "-march=$arm_arch",
 -        "-mfloat-abi=$arm_float_abi",
 -      ]
--      if (arm_tune != "") {
++    } else if (current_cpu == "arm64") {
++      assert(is_clang)
+       if (arm_tune != "") {
 -        cflags += [ "-mtune=$arm_tune" ]
--      }
++        cflags += [ "-mtune=$arm_tune", "-mcpu=$arm_tune" ]
+       }
 -      if (arm_use_thumb) {
 -        cflags += [ "-mthumb" ]
 -        if (is_android && !is_clang) {  # Clang doesn't support this option.
 -          cflags += [ "-mthumb-interwork" ]
++    } else if (current_cpu == "arm") {
 +      if (is_clang) {
 +        if (arm_arch != "armv7-a") {
 +          assert(false, "Any arm (32-bit) arch other than armv7-a is not supported by the bundled clang right now.")
@@ -55,7 +69,7 @@ index 33517e8..a143012 100644
 +
 +        cflags += ["--target=armv7-linux-gnueabihf"]
 +        ldflags += ["--target=armv7-linux-gnueabihf"]
-+        
++
 +        # arm.gni sets arm_tune to "generic-armv7-a" if no explicit tune is configured,
 +        # but this is not supported by clang. So lets just overwrite it here.
 +        if (arm_tune == "generic-armv7-a") {
@@ -104,7 +118,7 @@ index 33517e8..a143012 100644
 +        }
        }
      }
- 
+
 diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
 index 17ffd1b..6e6c45c 100644
 --- a/build/config/sysroot.gni
@@ -132,7 +146,7 @@ index f8b26c0..0e77cae 100644
 @@ -110,6 +110,27 @@ gcc_toolchain("clang_arm64") {
    is_clang = true
  }
- 
+
 +gcc_toolchain("clang_arm") {
 +  if (use_clang_type_profiler) {
 +    prefix = rebase_path("//third_party/llvm-allocated-type/Linux_x64/bin",
@@ -157,6 +171,5 @@ index f8b26c0..0e77cae 100644
  gcc_toolchain("x64") {
    prefix = ""
    cc = "${compiler_prefix}${prefix}gcc"
--- 
+--
 2.25.1
-
