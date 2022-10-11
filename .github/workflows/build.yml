@@ -150,18 +150,29 @@ jobs:
           - profile
           - release
         include:
+          # Pi 4 is a Cortex-A72, but doesn't support cryptography instructions.
+          # Use -mcpu=cortex-a72+nocrypto -mtune=cortex-a72
           - artifact-name: pi4
             cpu: arm
+            arm-cpu: cortex-a72+nocrypto
             arm-tune: cortex-a72
+
           - artifact-name: pi4-64
             cpu: arm64
-            arm-tune: cortex-a72+nocrypto  # Pi-4 is a Cortex A72, but doesn't support cryptography instructions.
+            arm-cpu: cortex-a72+nocrypto
+            arm-tune: cortex-a72
+          
+          # Use -mcpu=generic -mtune=generic for the generic builds.
           - artifact-name: armv7-generic
             cpu: arm
+            arm-cpu: generic
             arm-tune: generic
+            
           - artifact-name: aarch64-generic
             cpu: arm64
+            arm-cpu: generic
             arm-tune: generic
+
           - runtime-mode: debug
             has-gen-snapshot: false
           - runtime-mode: profile
@@ -187,7 +198,9 @@ jobs:
           os: linux
           cpu: ${{ matrix.cpu }}
           additional-gn-args: '--embedder-for-target --disable-desktop-embeddings --no-build-glfw-shell --no-build-embedder-examples --no-goma'
-          additional-raw-gn-args: 'arm_tune = "${{ matrix.arm-tune }}"'
+          additional-raw-gn-args: |
+            arm_cpu = "${{ matrix.arm-cpu }}"
+            arm_tune = "${{ matrix.arm-tune }}"
            
       - name: upload artifacts (with gen_snapshot)
         if: ${{ matrix.has-gen-snapshot != 'false' }}
