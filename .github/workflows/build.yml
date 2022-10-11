@@ -155,7 +155,7 @@ jobs:
             arm-tune: cortex-a72
           - artifact-name: pi4-64
             cpu: arm64
-            arm-tune: cortex-a72
+            arm-tune: cortex-a72+nocrypto  # Pi-4 is a Cortex A72, but doesn't support cryptography instructions.
           - artifact-name: armv7-generic
             cpu: arm
             arm-tune: generic
