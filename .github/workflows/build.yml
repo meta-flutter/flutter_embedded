@@ -26,7 +26,7 @@ jobs:
 
         # Read the engine.version.stable file and trim away anything that's not a hex digit
         # (So we don't include whitespace in the output variable, if that's possible)
-        run: echo ::set-output name=hash::$(cat engine.version.stable | tr -dc [:xdigit:])
+        run: echo "hash=$(cat engine.version.stable | tr -dc [:xdigit:])" >> $GITHUB_OUTPUT
       
       - name: Log stable engine version
         run: |
@@ -85,16 +85,40 @@ jobs:
         run: |
           gclient --version
           echo DEPOT_TOOLS_UPDATE=0 >> $GITHUB_ENV
+      
+      - name: Check if engine has dead libcxx repo
+        id: check-dead-libcxx-repo
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: |
+          echo "::group::Downloading DEPS file"
+          wget https://raw.githubusercontent.com/flutter/engine/${{ steps.engine-version-stable.outputs.hash }}/DEPS
+          echo "::endgroup::"
           
+          echo "::group::DEPS file contents"
+          cat ./DEPS
+          echo "::endgroup::"
+
+          echo '::echo::on'
+          if grep -F "7524ef50093a376f334a62a7e5cebf5d238d4c99" ./DEPS
+          then
+            echo '::set-output name=dead-libcxx-repo::true'
+          else
+            echo '::set-output name=dead-libcxx-repo::false'
+          fi
+          echo '::echo::off'
+
+          rm ./DEPS
+
       - name: Bootstrap engine environment
-        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' && !startsWith(github.ref, 'refs/tags/3.3') }}
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' && steps.check-dead-libcxx-repo.outputs.dead-libcxx-repo == 'false' }}
         shell: bash
         run: |
           mkdir -p engine
           cp dot-gclient.py engine/.gclient
           
-      - name: Bootstrap engine environment (with libcxx workaround)
-        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' && startsWith(github.ref, 'refs/tags/3.3') }}
+      - name: Bootstrap engine environment (with dead libcxx repo workaround)
+        if: ${{ steps.stamp-cache.outputs.cache-hit != 'true' && steps.check-dead-libcxx-repo.outputs.dead-libcxx-repo == 'true' }}
         shell: bash
         run: |
           mkdir -p engine
@@ -180,16 +204,18 @@ jobs:
           - runtime-mode: release
             has-gen-snapshot: true
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       
       - name: Read stable engine version
         id: engine-version-stable
-        run: echo ::set-output name=hash::$(cat engine.version.stable)
-        
-      - name: Test output
-        run: echo ${{ steps.engine-version-stable.outputs.hash }}
+        run: echo "hash=$(cat engine.version.stable | tr -dc [:xdigit:])" >> $GITHUB_OUTPUT
+
+      - name: Log engine version
+        run: |
+          echo *** engine version: ***
+          echo ${{ steps.engine-version-stable.outputs.hash }}
       
-      - name: build engine
+      - name: Build engine
         uses: ./.github/actions/build-engine
         with:
           ref: "${{ steps.engine-version-stable.outputs.hash  }}"
@@ -202,11 +228,11 @@ jobs:
             arm_cpu = "${{ matrix.arm-cpu }}"
             arm_tune = "${{ matrix.arm-tune }}"
            
-      - name: upload artifacts (with gen_snapshot)
-        if: ${{ matrix.has-gen-snapshot != 'false' }}
+      - name: Upload artifacts (with gen_snapshot)
+        if: ${{ matrix.has-gen-snapshot == true }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}
+          name: ${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}
           path: |
             ${{ github.workspace }}/engine/src/out/build/compile_commands.json
             ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
@@ -214,148 +240,340 @@ jobs:
             ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
             ${{ github.workspace }}/engine/src/out/build/clang_x64/gen_snapshot
       
-      - name: upload artifacts (without gen_snapshot)
-        if: ${{ matrix.has-gen-snapshot != 'true' }}
+      - name: Upload artifacts (without gen_snapshot)
+        if: ${{ matrix.has-gen-snapshot == false }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}
+          name: ${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}
           path: |
             ${{ github.workspace }}/engine/src/out/build/compile_commands.json
             ${{ github.workspace }}/engine/src/out/build/libflutter_engine.so
             ${{ github.workspace }}/engine/src/out/build/icudtl.dat
             ${{ github.workspace }}/engine/src/out/build/flutter_embedder.h
-
-
-  release:
-    name: 'Publish release'
+  
+  package:
+    name: 'Package artifacts'
     runs-on: ubuntu-latest
     needs: [build-engine]
-    if: startsWith(github.ref, 'refs/tags/')
-    
+    strategy:
+      matrix:
+        artifact-name:
+          - pi4
+          - pi4-64
+          - armv7-generic
+          - aarch64-generic
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: Read stable engine version
         id: engine-version-stable
-        run: echo ::set-output name=hash::$(cat engine.version.stable)
+        run: echo "hash=$(cat engine.version.stable | tr -dc [:xdigit:])" >> $GITHUB_OUTPUT
         
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-debug
-          path: pi4-debug
+          name: ${{ matrix.artifact-name }}-debug
+          path: debug
         
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-profile
-          path: pi4-profile
+          name: ${{ matrix.artifact-name }}-profile
+          path: profile
         
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-release
-          path: pi4-release
+          name: ${{ matrix.artifact-name }}-release
+          path: release
           
+      - name: Package artifacts
+        run: |
+          mkdir -p pkg
+          cd pkg
+          cp ../engine.version.stable ./engine.version
+          cp ../debug/libflutter_engine.so ./libflutter_engine.so.debug
+          cp ../profile/libflutter_engine.so ./libflutter_engine.so.profile
+          cp ../release/libflutter_engine.so ./libflutter_engine.so.release
+          cp ../debug/flutter_embedder.h ./flutter_embedder.h
+          cp ../debug/icudtl.dat ./icudtl.dat
+          cp ../profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
+          cp ../release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
+          XZ_DEFAULTS="-T 0" tar -cJvf ../${{ matrix.artifact-name }}.tar.xz *
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            pkg/engine.version
+            pkg/libflutter_engine.so.debug
+            pkg/libflutter_engine.so.profile
+            pkg/libflutter_engine.so.release
+            pkg/flutter_embedder.h
+            pkg/icudtl.dat
+            pkg/gen_snapshot_linux_x64_profile
+            pkg/gen_snapshot_linux_x64_release
+      
+      - name: Upload artifacts (.tar.xz)
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact-name }}-tar-xz
+          path: |
+            ${{ matrix.artifact-name }}.tar.xz
+            
+  build-app:
+    name: 'Build test app'
+    runs-on: ubuntu-latest
+    needs: [package]
+    strategy:
+      matrix:
+        artifact-name:
+          - pi4
+          - pi4-64
+          - armv7-generic
+          - aarch64-generic
+        runtime-mode:
+          - debug
+          - profile
+          - release
+        include:
+          - artifact-name: pi4
+            arch: armv7
+          - artifact-name: pi4-64
+            arch: aarch64
+          - artifact-name: armv7-generic
+            arch: armv7
+          - artifact-name: aarch64-generic
+            arch: aarch64
+    steps:
+      - uses: actions/checkout@v3
+      
+      # TODO: Use the exact flutter version here
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      
+      - name: Determine flutter SDK path
+        run: |
+          echo "FLUTTER_SDK_PATH=$(dirname $(dirname $(which flutter)))" >> $GITHUB_ENV
+      
+      - name: Log flutter SDK path
+        run: |
+          echo flutter sdk path: $FLUTTER_SDK_PATH
+           
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-64-debug
-          path: pi4-64-debug
-        
-      - uses: actions/download-artifact@v3
+          name: ${{ matrix.artifact-name }}
+          path: binaries
+      
+      # Seems like this is necessary. Maybe it's not if we use a tar-file instead.
+      - name: Make binaries executable
+        working-directory: binaries
+        run: |
+          chmod +x ./libflutter_engine.so* ./gen_snapshot*
+      
+      # Show the complete file tree, and print all metadata (permissions, owner, group, filesize, last modification date)
+      - name: Show file tree
+        run: |
+          sudo apt-get install -y tree
+          tree -apugshDF
+      
+      - working-directory: test_app
+        run: |
+          flutter pub get
+          flutter build bundle
+          cp ../binaries/libflutter_engine.so.${{ matrix.runtime-mode }} build/flutter_assets/libflutter_engine.so
+          cp ../binaries/icudtl.dat build/flutter_assets/
+      
+      - name: Build kernel snapshot (profile)
+        if: ${{ matrix.runtime-mode == 'profile' }}
+        working-directory: test_app
+        run: |
+          $FLUTTER_SDK_PATH/bin/cache/dart-sdk/bin/dart \
+            $FLUTTER_SDK_PATH/bin/cache/dart-sdk/bin/snapshots/frontend_server.dart.snapshot \
+            --sdk-root $FLUTTER_SDK_PATH/bin/cache/artifacts/engine/common/flutter_patched_sdk \
+            --target=flutter \
+            --aot --tfa \
+            -Ddart.vm.product=false \
+            -Ddart.vm.profile=true \
+            --packages .dart_tool/package_config.json \
+            --output-dill build/kernel_snapshot.dill \
+            --verbose \
+            --depfile build/kernel_snapshot.d \
+            package:test_app/main.dart
+            
+      - name: Build kernel snapshot (release)
+        if: ${{ matrix.runtime-mode == 'release' }}
+        working-directory: test_app
+        run: |
+          $FLUTTER_SDK_PATH/bin/cache/dart-sdk/bin/dart \
+            $FLUTTER_SDK_PATH/bin/cache/dart-sdk/bin/snapshots/frontend_server.dart.snapshot \
+            --sdk-root $FLUTTER_SDK_PATH/bin/cache/artifacts/engine/common/flutter_patched_sdk_product \
+            --target=flutter \
+            --aot --tfa \
+            -Ddart.vm.product=true \
+            -Ddart.vm.profile=false \
+            --packages .dart_tool/package_config.json \
+            --output-dill build/kernel_snapshot.dill \
+            --verbose \
+            --depfile build/kernel_snapshot.d \
+            package:test_app/main.dart
+      
+      # Specify --sim-use-hardfp if we're building for armv7.
+      - name: Build app.so (armv7)
+        if: ${{ (matrix.runtime-mode == 'profile' || matrix.runtime-mode == 'release') && (matrix.arch == 'armv7') }}
+        working-directory: test_app
+        run: |
+          ../binaries/gen_snapshot_linux_x64_${{ matrix.runtime-mode }} \
+            --deterministic \
+            --snapshot_kind=app-aot-elf \
+            --elf=build/flutter_assets/app.so \
+            --strip \
+            --sim-use-hardfp \
+            --verbose \
+            build/kernel_snapshot.dill
+
+      - name: Build app.so (aarch64)
+        if: ${{ (matrix.runtime-mode == 'profile' || matrix.runtime-mode == 'release') && (matrix.arch == 'aarch64') }}
+        working-directory: test_app
+        run: |
+          ../binaries/gen_snapshot_linux_x64_${{ matrix.runtime-mode }} \
+            --deterministic \
+            --snapshot_kind=app-aot-elf \
+            --elf=build/flutter_assets/app.so \
+            --strip \
+            --verbose \
+            build/kernel_snapshot.dill
+            
+      - name: Copy asset bundle
+        run: |
+          cp -r test_app/build/flutter_assets app-assets
+
+      - name: Upload app assets
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-64-profile
-          path: pi4-64-profile
-        
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-pi4-64-release
-          path: pi4-64-release
+          name: ${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}-app-assets
+          path: app-assets
           
+  test-app-pi4-32bit:
+    name: 'Test app on a Raspberry Pi (32-bit)'
+    runs-on: [ARM]
+    needs: [build-app]
+    strategy:
+      matrix:
+        artifact-name:
+          - pi4
+          - armv7-generic
+        runtime-mode:
+          - debug
+          - profile
+          - release
+    steps:
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-armv7-generic-debug
-          path: armv7-generic-debug
-        
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-armv7-generic-profile
-          path: armv7-generic-profile
-        
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-armv7-generic-release
-          path: armv7-generic-release
+          name: ${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}-app-assets
+          path: app
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-aarch64-generic-debug
-          path: aarch64-generic-debug
-        
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-aarch64-generic-profile
-          path: aarch64-generic-profile
-        
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.engine-version-stable.outputs.hash }}-aarch64-generic-release
-          path: aarch64-generic-release
-          
-      - name: Package Pi4 artifacts
+          repository: ardera/flutter-pi
+          path: flutter-pi
+      
+      - name: Configure
+        working-directory: flutter-pi
         run: |
-          mkdir -p pi4
-          cd pi4
-          cp ../engine.version.stable ./engine.version
-          cp ../pi4-debug/libflutter_engine.so ./libflutter_engine.so.debug
-          cp ../pi4-profile/libflutter_engine.so ./libflutter_engine.so.profile
-          cp ../pi4-release/libflutter_engine.so ./libflutter_engine.so.release
-          cp ../pi4-debug/flutter_embedder.h ./flutter_embedder.h
-          cp ../pi4-debug/icudtl.dat ./icudtl.dat
-          cp ../pi4-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
-          cp ../pi4-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
-          XZ_DEFAULTS="-T 0" tar -cJvf ../pi4.tar.xz *
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -S. -Bbuild
       
-      - name: Package Pi4-64 artifacts
+      - name: Build
+        working-directory: flutter-pi/build
+        run: ninja
+      
+      # The app should quit with exit code 0 by itself.
+      - name: Run app (debug)
+        if: ${{ matrix.runtime-mode == 'debug' }}
+        timeout-minutes: 3
         run: |
-          mkdir -p pi4-64
-          cd pi4-64
-          cp ../engine.version.stable ./engine.version
-          cp ../pi4-64-debug/libflutter_engine.so ./libflutter_engine.so.debug
-          cp ../pi4-64-profile/libflutter_engine.so ./libflutter_engine.so.profile
-          cp ../pi4-64-release/libflutter_engine.so ./libflutter_engine.so.release
-          cp ../pi4-64-debug/flutter_embedder.h ./flutter_embedder.h
-          cp ../pi4-64-debug/icudtl.dat ./icudtl.dat
-          cp ../pi4-64-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
-          cp ../pi4-64-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
-          XZ_DEFAULTS="-T 0" tar -cJvf ../pi4-64.tar.xz *
+          flutter-pi/build/flutter-pi app
       
-      - name: Package generic ARMv7 artifacts
+      - name: Run app (profile / release)
+        if: ${{ matrix.runtime-mode == 'profile' || matrix.runtime-mode == 'release' }}
+        timeout-minutes: 3
         run: |
-          mkdir -p armv7-generic
-          cd armv7-generic
-          cp ../engine.version.stable ./engine.version
-          cp ../armv7-generic-debug/libflutter_engine.so ./libflutter_engine.so.debug
-          cp ../armv7-generic-profile/libflutter_engine.so ./libflutter_engine.so.profile
-          cp ../armv7-generic-release/libflutter_engine.so ./libflutter_engine.so.release
-          cp ../armv7-generic-debug/flutter_embedder.h ./flutter_embedder.h
-          cp ../armv7-generic-debug/icudtl.dat ./icudtl.dat
-          cp ../armv7-generic-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
-          cp ../armv7-generic-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
-          XZ_DEFAULTS="-T 0" tar -cJvf ../armv7-generic.tar.xz *
+          flutter-pi/build/flutter-pi --${{ matrix.runtime-mode }} app
+  
+  test-app-pi4-64bit:
+    name: 'Test app on a Raspberry Pi (64-bit)'
+    runs-on: [ARM64]
+    needs: [build-app]
+    strategy:
+      matrix:
+        artifact-name:
+          - pi4-64
+          - aarch64-generic
+        runtime-mode:
+          - debug
+          - profile
+          - release
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.artifact-name }}-${{ matrix.runtime-mode }}-app-assets
+          path: app
       
-      - name: Package generic AArch64 artifacts
+      - uses: actions/checkout@v3
+        with:
+          repository: ardera/flutter-pi
+          path: flutter-pi
+      
+      - name: Configure
+        working-directory: flutter-pi
         run: |
-          mkdir -p armv8-generic
-          cd armv8-generic
-          cp ../engine.version.stable ./engine.version
-          cp ../aarch64-generic-debug/libflutter_engine.so ./libflutter_engine.so.debug
-          cp ../aarch64-generic-profile/libflutter_engine.so ./libflutter_engine.so.profile
-          cp ../aarch64-generic-release/libflutter_engine.so ./libflutter_engine.so.release
-          cp ../aarch64-generic-debug/flutter_embedder.h ./flutter_embedder.h
-          cp ../aarch64-generic-debug/icudtl.dat ./icudtl.dat
-          cp ../aarch64-generic-profile/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_profile
-          cp ../aarch64-generic-release/clang_x64/gen_snapshot ./gen_snapshot_linux_x64_release
-          XZ_DEFAULTS="-T 0" tar -cJvf ../aarch64-generic.tar.xz *
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -S. -Bbuild
       
-      - uses: softprops/action-gh-release@v0.1.14
+      - name: Build
+        working-directory: flutter-pi/build
+        run: ninja
+      
+      # The app should quit with exit code 0 by itself.
+      - name: Run app (debug)
+        if: ${{ matrix.runtime-mode == 'debug' }}
+        timeout-minutes: 3
+        run: |
+          flutter-pi/build/flutter-pi app
+      
+      - name: Run app (profile / release)
+        if: ${{ matrix.runtime-mode == 'profile' || matrix.runtime-mode == 'release' }}
+        timeout-minutes: 3
+        run: |
+          flutter-pi/build/flutter-pi --${{ matrix.runtime-mode }} app
+  
+  release:
+    name: 'Publish release'
+    runs-on: ubuntu-latest
+    needs: [package, test-app-pi4-32bit, test-app-pi4-64bit]
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: pi4-tar-xz
+          path: pi4.tar.xz
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: pi4-64-tar-xz
+          path: pi4-64.tar.xz
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: armv7-generic-tar-xz
+          path: armv7-generic.tar.xz
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: aarch64-generic-tar-xz
+          path: aarch64-generic.tar.xz
+      
+      - uses: softprops/action-gh-release@v1
         with:
           files: |
             pi4.tar.xz

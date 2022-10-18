@@ -20,38 +20,54 @@ jobs:
       changed: ${{ steps.check-roll.outputs.changed }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
+          # We need to use a custom token here to be able to push commits.
           token: ${{ secrets.ENGINE_ROLL_TOKEN }}
       
       # If we only want to find out the stable engine version, we can do `wget -O engine.version.stable https://raw.githubusercontent.com/flutter/flutter/stable/bin/internal/engine.version`
-      # However we also want to find out the semver of the flutter release (3.0.5 for example),
-      - uses: actions/checkout@v2
+      # However we also want to find out the semver of the flutter release (3.0.5 for example), 
+      - name: Download latest engine.version
+        run: wget -O engine.version.stable https://raw.githubusercontent.com/flutter/flutter/stable/bin/internal/engine.version
+      
+      - name: Check if stable engine version changed 
+        id: check-roll
+        run: |
+          git status
+          if git diff-index --quiet HEAD -- engine.version.stable; then
+            echo "No changes"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Delta"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Log
+        run: |
+          echo '*** Stable engine commit changed? ***'
+          echo steps.check-roll.outputs.changed: ${{ steps.check-roll.outputs.changed }}
+      
+      - uses: actions/cache@v3
+        if: ${{ steps.check-roll.outputs.changed == 'true' }}
+        with:
+          path: flutter
+          key: flutter-sdk-repo
+      
+      # We need to checkout the complete flutter SDK to find the semver.
+      - name: Checkout flutter SDK
+        if: ${{ steps.check-roll.outputs.changed == 'true' }}
+        uses: actions/checkout@v3
         with:
           repository: flutter/flutter
           ref: stable
           path: flutter
-          # fetch complete history
-          fetch-depth: 0
-  
-      - run: |
-          cp flutter/bin/internal/engine.version engine.version.stable
-
-      - name: Check if stable engine version changed 
-        id: check-roll
-        run: |
-          if git diff-index --quiet HEAD -- engine.version.stable; then
-            echo "No changes"
-            echo ::set-output name=changed::false
-          else
-            echo "Delta"
-            echo ::set-output name=changed::true
-          fi
+          fetch-depth: 0  # fetch complete history
       
       # reference: https://github.com/flutter/flutter/blob/a880c4ed3590477380c975f867406ba336834848/packages/flutter_tools/lib/src/version.dart#L703
       # if the flutter people ever decide to point more than one tags at the stable SDK commit we're in trouble here
       - name: find out flutter SDK semver for this engine version
         id: flutter-version
+        if: ${{ steps.check-roll.outputs.changed == 'true' }}
         working-directory: flutter
         run: |
           echo ::set-output name=semver::$(git tag --points-at HEAD | tr -d [:space:])
