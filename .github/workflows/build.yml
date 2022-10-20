@@ -553,28 +553,48 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
+      - uses: actions/checkout@v3
+      
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo "hash=$(cat engine.version.stable | tr -dc [:xdigit:])" >> $GITHUB_OUTPUT
+
+      - name: Log engine version
+        run: |
+          echo *** engine version: ***
+          echo ${{ steps.engine-version-stable.outputs.hash }}
+          
       - uses: actions/download-artifact@v3
         with:
           name: pi4-tar-xz
-          path: pi4.tar.xz
       
       - uses: actions/download-artifact@v3
         with:
           name: pi4-64-tar-xz
-          path: pi4-64.tar.xz
       
       - uses: actions/download-artifact@v3
         with:
           name: armv7-generic-tar-xz
-          path: armv7-generic.tar.xz
       
       - uses: actions/download-artifact@v3
         with:
           name: aarch64-generic-tar-xz
-          path: aarch64-generic.tar.xz
+      
+      # Show the complete file tree, and print all metadata (permissions, owner, group, filesize, last modification date)
+      - name: Show file tree
+        run: |
+          sudo apt-get install -y tree
+          tree -apugshDF
       
       - uses: softprops/action-gh-release@v1
         with:
+          body: |
+            flutter engine binaries for armv7 and aarch64.
+              
+            flutter channel: stable
+            flutter version: [`${{ github.ref_name }}`](https://github.com/flutter/flutter/tree/${{ github.ref_name }})
+            engine commit: [`${{ steps.engine-version-stable.outputs.hash }}`](https://github.com/flutter/engine/commit/${{ steps.engine-version-stable.outputs.hash }})
+          fail_on_unmatched_files: true
           files: |
             pi4.tar.xz
             pi4-64.tar.xz
