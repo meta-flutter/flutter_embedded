@@ -589,11 +589,11 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           body: |
-            flutter engine binaries for armv7 and aarch64.
-              
-            flutter channel: stable
-            flutter version: [`${{ github.ref_name }}`](https://github.com/flutter/flutter/tree/${{ github.ref_name }})
-            engine commit: [`${{ steps.engine-version-stable.outputs.hash }}`](https://github.com/flutter/engine/commit/${{ steps.engine-version-stable.outputs.hash }})
+            | name | info | reference |
+            | - | - | - |
+            | flutter channel | stable | |
+            | flutter version | ${{ github.ref_name }} | [flutter/flutter@`${{ github.ref_name }}`](https://github.com/flutter/flutter/tree/${{ github.ref_name }}) |
+            | engine commit | `${{ steps.engine-version-stable.outputs.hash }}` | https://github.com/flutter/engine/commit/${{ steps.engine-version-stable.outputs.hash }} |
           fail_on_unmatched_files: true
           files: |
             pi4.tar.xz
