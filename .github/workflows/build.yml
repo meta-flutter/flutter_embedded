@@ -546,6 +546,78 @@ jobs:
         run: |
           flutter-pi/build/flutter-pi --${{ matrix.runtime-mode }} app
   
+  push-old-repo:
+    name: 'Push binaries to old engine binaries repo'
+    runs-on: ubuntu-latest
+    needs: [package, test-app-pi4-32bit, test-app-pi4-64bit]
+    if: true || startsWith(github.ref, 'refs/tags')
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Read stable engine version
+        id: engine-version-stable
+        run: echo "hash=$(cat engine.version.stable | tr -dc [:xdigit:])" >> $GITHUB_OUTPUT
+      
+      - name: Log engine version
+        run: |
+          echo *** engine version: ***
+          echo ${{ steps.engine-version-stable.outputs.hash }}
+      
+      - uses: actions/checkout@v3
+        with:
+          repository: ardera/flutter-engine-binaries-for-arm
+          token: ${{ secrets.OLD_ENGINE_BINARIES_REPO_TOKEN }}
+          path: engine-binaries
+          ref: ci
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: armv7-generic
+          path: engine-binaries/arm
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: aarch64-generic
+          path: engine-binaries/arm64
+      
+      - working-directory: engine-binaries
+        run: |
+          mv arm/flutter_embedder.h engine-binaries
+          rm arm64/flutter_embedder.h
+
+      - uses: actions/cache@v3
+        with:
+          path: flutter
+          key: flutter-sdk-repo
+      
+      - name: Checkout flutter SDK
+        uses: actions/checkout@v3
+        with:
+          repository: flutter/flutter
+          ref: stable
+          path: flutter
+          fetch-depth: 0  # fetch complete history
+      
+      - name: Find out flutter SDK semver for this engine version
+        id: flutter-version
+        working-directory: flutter
+        run: |
+          echo "semver=$(git tag --points-at HEAD | tr -d [:space:])" >> $GITHUB_OUTPUT
+      
+      - name: Log flutter version
+        run: |
+          echo flutter version: ${{ steps.flutter-version.outputs.semver }}
+      
+      - name: Commit new stable engine version
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: 'update engine binaries for flutter ${{ steps.flutter-version.outputs.semver }}'
+          add: 'engine.version.stable'
+          tag: engine_${{ steps.engine-version-stable.outputs.hash }} --force
+          tag_push: '--force'
+  
   release:
     name: 'Publish release'
     runs-on: ubuntu-latest
